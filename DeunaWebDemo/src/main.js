@@ -324,7 +324,7 @@ document.querySelector('#app').innerHTML = `
       <div class="feature-card">
         <div class="fc-icon">🏷️</div>
         <h3>Comercializar Cupón</h3>
-        <p>Reventa P2P de cupones. Formulario con slider de precio, precio máximo controlado, publicación en marketplace.</p>
+        <p>Reventa P2P de cupones. Formulario con slider de precio, precio máximo controlado, publicación en la comunidad.</p>
         <span class="fc-tag new">✅ Implementado</span>
       </div>
       <div class="feature-card">
