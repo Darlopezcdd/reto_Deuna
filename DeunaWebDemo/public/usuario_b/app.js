@@ -17,13 +17,15 @@ const db = firebase.firestore();
 const rtdb = firebase.database();
 
 // ── Constantes ──
-const USER_ID = 'dario_lopez';
-const GASTO_ACUMULADO_DEFAULT = 250;
+// ⚠️ ESTE ES EL USUARIO B (comprador)
+const USER_ID = 'jerson_pozo';
+const GASTO_ACUMULADO_DEFAULT = 300;
 
 // ── Estado Local ──
 let gastoAcumulado = GASTO_ACUMULADO_DEFAULT;
 let catalogoCupones = [];
 let misCupones = [];
+let marketplaceCupones = []; // Cupones de OTROS usuarios en venta
 let currentCuponIdx = null;
 
 // ═══════════════════════════════════════════════
@@ -107,7 +109,7 @@ async function seedFirebase() {
     if (!userSnap.exists) {
       console.log('🔥 Creating user profile...');
       await db.collection('usuarios').doc(USER_ID).set({
-        nombre: 'Dario Lopez',
+        nombre: 'Jerson Pozo',
         gastoAcumulado: GASTO_ACUMULADO_DEFAULT,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
@@ -287,23 +289,19 @@ function renderMisCupones() {
     <p class="cup-desc">Cupones publicados por otros usuarios</p>
   </div>`;
 
-  const publicados = misCupones.filter(mc => mc.estado === 'publicado');
-  if (publicados.length === 0) {
-    html += '<div style="text-align:center;padding:20px;color:#aaa"><p style="font-size:.75rem">No hay cupones disponibles en el marketplace</p></div>';
+  if (marketplaceCupones.length === 0) {
+    html += '<div style="text-align:center;padding:20px;color:#aaa"><p style="font-size:.75rem">No hay cupones disponibles en el marketplace.<br>Espera a que otro usuario publique uno.</p></div>';
   } else {
-    publicados.forEach((mc, i) => {
-      const realIdx = misCupones.indexOf(mc);
+    marketplaceCupones.forEach((mc, i) => {
       html += `<div class="cupon-card-v2 marketplace-card">
-        <div class="cv2-img" style="background:${mc.bg}"><span>${mc.emoji}</span></div>
+        <div class="cv2-img" style="background:${mc.bg || 'linear-gradient(135deg,#7B3FBD,#5B2D8E)'}"><span>${mc.emoji || '🎟️'}</span></div>
         <div class="cv2-body">
-          ${mc.badge ? `<div class="cv2-badge green">${mc.badge}</div>` : ''}
           <strong>${mc.nombre}</strong>
-          <p>${mc.descCorto || mc.desc}</p>
-          <p style="font-size:.62rem;color:#888">Vendedor: <strong>otro_usuario</strong></p>
+          <p style="font-size:.62rem;color:#888">Vendedor: <strong>${mc.vendedor}</strong></p>
         </div>
         <div class="cv2-right">
-          <div class="market-price">$${mc.precioReventa.toFixed(2)}</div>
-          <button class="cupon-btn green-btn" onclick="event.stopPropagation(); comprarCuponMarket(${realIdx})">Comprar</button>
+          <div class="market-price">$${mc.precio.toFixed(2)}</div>
+          <button class="cupon-btn green-btn" onclick="event.stopPropagation(); comprarDelMarketplace('${mc._docId}')">Comprar</button>
         </div>
       </div>`;
     });
@@ -554,6 +552,9 @@ async function publicarCupon() {
       cuponId: mc.cuponId,
       nombre: mc.nombre,
       emoji: mc.emoji,
+      bg: mc.bg || '',
+      badge: mc.badge || '',
+      descCorto: mc.descCorto || mc.desc || '',
       precio: precio,
       estado: 'disponible',
       fechaPublicacion: firebase.firestore.FieldValue.serverTimestamp()
@@ -656,73 +657,100 @@ function updateWalletUI() {
 }
 
 // ═══════════════════════════════════════════════
-//  COMPRAR CUPÓN DEL MARKETPLACE (Demo visual)
+//  MARKETPLACE: ESCUCHAR CUPONES DE OTROS USERS
 // ═══════════════════════════════════════════════
-async function comprarCuponMarket(idx) {
-  const mc = misCupones[idx];
-  if (!mc || mc.estado !== 'publicado') {
-    t('⚠️ Este cupón ya no está disponible');
-    return;
-  }
+function listenMarketplace() {
+  db.collection('mercado_cupones').where('estado', '==', 'disponible')
+    .onSnapshot((snap) => {
+      marketplaceCupones = [];
+      snap.forEach(doc => {
+        const data = doc.data();
+        // Solo mostrar cupones de OTROS usuarios
+        if (data.vendedor !== USER_ID) {
+          marketplaceCupones.push({ ...data, _docId: doc.id });
+        }
+      });
+      renderMisCupones();
+      if (marketplaceCupones.length > 0) {
+        t('🛒 Hay ' + marketplaceCupones.length + ' cupón(es) disponibles en el marketplace');
+      }
+    }, (err) => {
+      console.warn('Marketplace listener error:', err);
+    });
+}
 
-  const precio = mc.precioReventa;
+// ═══════════════════════════════════════════════
+//  COMPRAR DEL MARKETPLACE (Multi-usuario real)
+// ═══════════════════════════════════════════════
+async function comprarDelMarketplace(marketDocId) {
+  const mc = marketplaceCupones.find(m => m._docId === marketDocId);
+  if (!mc) { t('⚠️ Este cupón ya no está disponible'); return; }
+
+  const precio = mc.precio;
 
   if (saldoBilletera < precio) {
     t(`❌ Saldo insuficiente. Necesitas $${precio.toFixed(2)} y tienes $${saldoBilletera.toFixed(2)}`);
     return;
   }
 
-  // Simular la compra
-  mc.estado = 'revendido';
-  mc.fechaReventa = new Date().toISOString();
-
-  // Actualizar saldos
   const saldoAntes = saldoBilletera;
-  saldoBilletera -= precio;  // El "comprador" paga
-
-  // Simular que el vendedor recibió el dinero
-  const saldoVendedorAntes = saldoBilletera + precio;
-  const gananciaVendedor = precio;
+  saldoBilletera -= precio;
 
   try {
-    // Update Firebase
-    if (mc._docId) {
-      await db.collection('usuarios').doc(USER_ID).collection('mis_cupones').doc(mc._docId).update({
-        estado: 'revendido',
-        fechaReventa: mc.fechaReventa
-      });
-    }
+    // Marcar como vendido en mercado
+    await db.collection('mercado_cupones').doc(marketDocId).update({
+      estado: 'vendido',
+      comprador: USER_ID,
+      fechaVenta: firebase.firestore.FieldValue.serverTimestamp()
+    });
 
-    // Remove from market
-    const marketSnap = await db.collection('mercado_cupones').where('cuponId', '==', mc.cuponId).where('estado', '==', 'disponible').get();
-    marketSnap.forEach(doc => doc.ref.update({ estado: 'vendido' }));
-
-    // Log activity
-    await rtdb.ref('actividad/' + USER_ID).push({
+    // Notificar al vendedor via RTDB
+    await rtdb.ref('actividad/' + mc.vendedor).push({
       tipo: 'compra_mercado',
       cupon: mc.nombre,
       cuponId: mc.cuponId,
       precio: precio,
+      comprador: USER_ID,
       timestamp: Date.now()
     });
+
+    // Guardar cupón comprado en mis cupones
+    const catRef = catalogoCupones.find(c => c.id === mc.cuponId);
+    await db.collection('usuarios').doc(USER_ID).collection('mis_cupones').add({
+      cuponId: mc.cuponId,
+      estado: 'activo',
+      precioReventa: 0,
+      fechaAdquisicion: new Date().toISOString(),
+      compradoEn: 'marketplace',
+      precioCompra: precio
+    });
+
+    // Agregar a mis cupones localmente
+    if (catRef) {
+      misCupones.push({
+        cuponId: mc.cuponId,
+        estado: 'activo',
+        precioReventa: 0,
+        fechaAdquisicion: new Date().toISOString(),
+        _docId: 'market_' + Date.now(),
+        ...catRef
+      });
+    }
   } catch(e) {
-    console.warn('Market buy error:', e);
+    console.warn('Buy error:', e);
   }
 
-  // Visual feedback
   t(`🎉 ¡Compraste ${mc.nombre} por $${precio.toFixed(2)}!`);
 
-  // Show balance change modal
   setTimeout(() => {
-    showBalanceChange(mc.nombre, precio, saldoAntes);
+    showBalanceChange(mc.nombre, mc.vendedor, precio, saldoAntes);
   }, 800);
 
   renderMisCupones();
   updateWalletUI();
 }
 
-function showBalanceChange(cuponName, precio, saldoAntes) {
-  // Create a quick modal showing the transaction
+function showBalanceChange(cuponName, vendedor, precio, saldoAntes) {
   const existing = document.getElementById('balance-modal');
   if (existing) existing.remove();
 
@@ -735,13 +763,13 @@ function showBalanceChange(cuponName, precio, saldoAntes) {
       <h3>Transacción completada</h3>
       <div style="text-align:left;margin:16px 0;font-size:.78rem;color:#555">
         <div style="padding:8px 12px;background:#f8f5ff;border-radius:10px;margin-bottom:8px">
-          <p style="font-weight:700;color:#5B2D8E;margin-bottom:4px">🛍️ Comprador (tú)</p>
+          <p style="font-weight:700;color:#5B2D8E;margin-bottom:4px">🛍️ Comprador (${USER_ID})</p>
           <p>Saldo anterior: <strong>$${saldoAntes.toFixed(2)}</strong></p>
           <p>Pagaste: <strong style="color:#e74c3c">-$${precio.toFixed(2)}</strong></p>
           <p>Saldo actual: <strong style="color:#0D6832">$${saldoBilletera.toFixed(2)}</strong></p>
         </div>
         <div style="padding:8px 12px;background:#f0fdf4;border-radius:10px">
-          <p style="font-weight:700;color:#0D6832;margin-bottom:4px">💸 Vendedor (otro usuario)</p>
+          <p style="font-weight:700;color:#0D6832;margin-bottom:4px">💸 Vendedor (${vendedor})</p>
           <p>Recibió: <strong style="color:#0D6832">+$${precio.toFixed(2)}</strong></p>
           <p style="font-size:.62rem;color:#888">Cupón: ${cuponName}</p>
         </div>
@@ -836,6 +864,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   await loadData();
   listenForActivity();
   listenForNewCupones();
+  listenMarketplace();
 
   // Dots animation
   let di = 0;

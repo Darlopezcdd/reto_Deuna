@@ -14,50 +14,61 @@
       background:radial-gradient(ellipse 80% 55% at 15% 0%,rgba(91,45,142,.35) 0%,transparent 60%),
       radial-gradient(ellipse 55% 45% at 85% 100%,rgba(91,45,142,.2) 0%,transparent 55%)}
 
-    .site-header{text-align:center;padding:24px 20px 0;position:relative;z-index:1}
+    .site-header{text-align:center;padding:16px 20px 0;position:relative;z-index:1}
     .logo-wrap{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:4px}
-    .logo-d{font-size:1.6rem;font-weight:900;color:#7B3FBD}
-    .logo-text{font-size:1.1rem;font-weight:700;letter-spacing:-.02em}
+    .logo-d{font-size:1.4rem;font-weight:900;color:#7B3FBD}
+    .logo-text{font-size:1rem;font-weight:700;letter-spacing:-.02em}
     .logo-text em{font-style:normal;color:#9090a8;font-weight:400}
-    .header-subtitle{font-size:.72rem;color:#9090a8}
+    .header-subtitle{font-size:.68rem;color:#9090a8}
 
-    .stage{display:flex;align-items:flex-start;justify-content:center;gap:20px;padding:20px;position:relative;z-index:1;flex-wrap:wrap}
+    .stage{display:flex;align-items:flex-start;justify-content:center;gap:12px;padding:12px 8px;position:relative;z-index:1;flex-wrap:wrap}
 
-    .phone-wrap{display:flex;flex-direction:column;align-items:center;gap:12px}
+    .phone-wrap{display:flex;flex-direction:column;align-items:center;gap:8px}
     .phone-label{text-align:center}
-    .phone-label h2{font-size:1rem;font-weight:800;margin-top:4px}
-    .phone-label p{font-size:.65rem;color:#9090a8}
+    .phone-label h2{font-size:.85rem;font-weight:800;margin-top:2px}
+    .phone-label p{font-size:.58rem;color:#9090a8}
 
-    .badge{display:inline-block;padding:4px 14px;border-radius:20px;font-size:.62rem;font-weight:700}
+    .badge{display:inline-block;padding:3px 12px;border-radius:20px;font-size:.56rem;font-weight:700}
     .badge-user{background:rgba(91,45,142,.2);color:#c084fc;border:1px solid rgba(91,45,142,.3)}
-    .badge-vendor{background:rgba(91,45,142,.2);color:#c084fc;border:1px solid rgba(91,45,142,.3)}
+    .badge-vendor{background:rgba(0,137,123,.15);color:#26a69a;border:1px solid rgba(0,137,123,.3)}
+    .badge-buyer{background:rgba(26,122,60,.15);color:#2ecc71;border:1px solid rgba(26,122,60,.3)}
 
     .phone-frame{
-      width:375px;height:720px;
-      border-radius:40px;
+      width:320px;height:640px;
+      border-radius:36px;
       border:3px solid rgba(255,255,255,.1);
       background:#fff;
       overflow:hidden;
-      box-shadow:0 25px 80px rgba(0,0,0,.6),inset 0 0 0 1px rgba(255,255,255,.05);
+      box-shadow:0 20px 60px rgba(0,0,0,.5),inset 0 0 0 1px rgba(255,255,255,.05);
       position:relative;
     }
     .phone-frame iframe{
-      width:100%;height:100%;border:none;border-radius:37px;
+      width:100%;height:100%;border:none;border-radius:33px;
     }
 
-    .connector{display:flex;flex-direction:column;align-items:center;gap:8px;padding-top:120px}
-    .connector-line{width:2px;height:60px;background:linear-gradient(180deg,transparent,rgba(123,63,189,.4),transparent)}
+    .connector{display:flex;flex-direction:column;align-items:center;gap:6px;padding-top:100px}
+    .connector-line{width:2px;height:40px;background:linear-gradient(180deg,transparent,rgba(123,63,189,.4),transparent)}
     .connector-badge{
       background:rgba(91,45,142,.15);border:1px solid rgba(123,63,189,.3);
-      border-radius:16px;padding:10px 14px;text-align:center;
+      border-radius:14px;padding:8px 10px;text-align:center;
     }
-    .connector-badge span{font-size:1.5rem;display:block}
-    .connector-badge small{font-size:.58rem;color:#9090a8;font-weight:500}
+    .connector-badge span{font-size:1.2rem;display:block}
+    .connector-badge small{font-size:.5rem;color:#9090a8;font-weight:500}
 
-    @media(max-width:900px){
+    /* Flow arrow between users */
+    .flow-connector{display:flex;flex-direction:column;align-items:center;gap:6px;padding-top:100px}
+    .flow-arrow-wrap{text-align:center}
+    .flow-arrow-wrap .arrow{font-size:1.5rem;color:#2ecc71;animation:pulse 2s infinite}
+    .flow-arrow-wrap small{font-size:.48rem;color:#2ecc71;font-weight:600;display:block}
+    @keyframes pulse{0%,100%{opacity:.5;transform:scale(.9)}50%{opacity:1;transform:scale(1.1)}}
+
+    @media(max-width:1100px){
+      .phone-frame{width:280px;height:560px}
+    }
+    @media(max-width:950px){
       .stage{flex-direction:column;align-items:center}
-      .connector{flex-direction:row;padding:0;gap:12px}
-      .connector-line{width:60px;height:2px;background:linear-gradient(90deg,transparent,rgba(123,63,189,.4),transparent)}
+      .connector,.flow-connector{flex-direction:row;padding:0;gap:8px}
+      .connector-line{width:40px;height:2px;background:linear-gradient(90deg,transparent,rgba(123,63,189,.4),transparent)}
     }
   </style>
 </head>
@@ -65,43 +76,65 @@
   <header class="site-header">
     <div class="logo-wrap">
       <span class="logo-d">d!</span>
-      <span class="logo-text">deuna <em>simulador</em></span>
+      <span class="logo-text">deuna <em>simulador multi-usuario</em></span>
     </div>
-    <p class="header-subtitle">Vista previa interactiva · Usuario & Vendedor · Firebase en tiempo real</p>
+    <p class="header-subtitle">Negocio crea cupón → Usuario A publica → Usuario B compra · Firebase en tiempo real</p>
   </header>
 
   <main class="stage">
-    <!-- PHONE: USUARIO -->
+    <!-- PHONE: NEGOCIOS -->
     <section class="phone-wrap">
       <div class="phone-label">
-        <span class="badge badge-user">👤 App Usuario</span>
-        <h2>Deuna</h2>
-        <p>Perspectiva del cliente</p>
+        <span class="badge badge-vendor">🏪 Negocio</span>
+        <h2>Deuna Negocios</h2>
+        <p>Crea cupones para usuarios</p>
       </div>
       <div class="phone-frame">
-        <iframe src="/usuarios/index.html" title="Deuna Usuarios"></iframe>
+        <iframe src="/negocios/index.html" title="Deuna Negocios"></iframe>
       </div>
     </section>
 
-    <!-- CONNECTOR -->
+    <!-- CONNECTOR 1 -->
     <div class="connector">
       <div class="connector-line"></div>
       <div class="connector-badge">
         <span>🔥</span>
-        <small>Firebase<br/>Tiempo Real</small>
+        <small>Firebase<br/>Sync</small>
       </div>
       <div class="connector-line"></div>
     </div>
 
-    <!-- PHONE: VENDEDOR -->
+    <!-- PHONE: USUARIO A (Vendedor) -->
     <section class="phone-wrap">
       <div class="phone-label">
-        <span class="badge badge-vendor">🏪 App Vendedor</span>
-        <h2>Deuna Negocios</h2>
-        <p>Perspectiva del comercio</p>
+        <span class="badge badge-user">👤 Vendedor</span>
+        <h2>Dario Lopez</h2>
+        <p>Adquiere y publica cupones</p>
       </div>
       <div class="phone-frame">
-        <iframe src="/negocios/index.html" title="Deuna Negocios"></iframe>
+        <iframe src="/usuarios/index.html" title="Deuna Usuario A"></iframe>
+      </div>
+    </section>
+
+    <!-- CONNECTOR 2: Marketplace flow -->
+    <div class="flow-connector">
+      <div class="connector-line"></div>
+      <div class="flow-arrow-wrap">
+        <div class="arrow">🛒</div>
+        <small>Marketplace<br/>P2P</small>
+      </div>
+      <div class="connector-line"></div>
+    </div>
+
+    <!-- PHONE: USUARIO B (Comprador) -->
+    <section class="phone-wrap">
+      <div class="phone-label">
+        <span class="badge badge-buyer">🛍️ Comprador</span>
+        <h2>Jerson Pozo</h2>
+        <p>Compra cupones del marketplace</p>
+      </div>
+      <div class="phone-frame">
+        <iframe src="/usuario_b/index.html" title="Deuna Usuario B"></iframe>
       </div>
     </section>
   </main>
