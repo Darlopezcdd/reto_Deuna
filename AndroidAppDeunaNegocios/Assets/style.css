@@ -178,3 +178,8 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#fff;color:#11
 .conf-status{font-size:.58rem;font-weight:700;padding:4px 10px;border-radius:6px;white-space:nowrap}
 .conf-status.confirmado{background:#D6F5E3;color:#0D6832}
 .conf-status.sin-confirmar{background:#FFF3E0;color:#E65100}
+
+/* Novedad highlight */
+.novedad-highlight{border:2px solid var(--teal) !important;box-shadow:0 2px 12px rgba(0,137,123,.15)}
+.teal-logo{background:rgba(0,137,123,.12) !important;color:var(--teal) !important}
+.teal-logo .neg-label{color:var(--teal) !important}

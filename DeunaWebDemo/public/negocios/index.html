@@ -108,16 +108,28 @@
           <div class="novedades-section">
             <h3 class="accesos-title">Novedades Deuna Negocios</h3>
             <div class="novedades-row">
-              <div class="novedad-card">
+              <div class="novedad-card" onclick="t('Agrega vendedores')">
                 <p class="novedad-text">Agrega vendedores a tu equipo</p>
                 <div class="novedad-logo">
                   <div class="d-logo-neg">d!<span class="neg-label">Negocios</span></div>
                 </div>
               </div>
-              <div class="novedad-card">
+              <div class="novedad-card" onclick="t('Administra ventas')">
                 <p class="novedad-text">Administra tus ventas con tu caja</p>
                 <div class="novedad-logo">
                   <div class="d-logo-neg">d!<span class="neg-label">Negocios</span></div>
+                </div>
+              </div>
+              <div class="novedad-card novedad-highlight" onclick="nav('cupones'); cupTab('crear')">
+                <p class="novedad-text">Crea cupón</p>
+                <div class="novedad-logo">
+                  <div class="d-logo-neg teal-logo">d!<span class="neg-label">Tecnología</span></div>
+                </div>
+              </div>
+              <div class="novedad-card" onclick="verTodasConfirmaciones()">
+                <p class="novedad-text">Historial confirmaciones</p>
+                <div class="novedad-logo">
+                  <div class="d-logo-neg teal-logo">d!<span class="neg-label">Tecnología</span></div>
                 </div>
               </div>
             </div>
@@ -298,7 +310,6 @@
 
   <nav class="bottom-nav" id="bnav">
     <button class="nb on" id="nb-inicio" onclick="nav('inicio')"><span class="ni">🏠</span><span class="nl">Inicio</span></button>
-    <button class="nb" id="nb-cupones" onclick="nav('cupones')"><span class="ni">🎟️</span><span class="nl">Cupones</span></button>
     <button class="nb" id="nb-caja" onclick="nav('caja')"><span class="ni">🖥️</span><span class="nl">Caja</span></button>
     <button class="nb" id="nb-menu" onclick="nav('menu')"><span class="ni">☰</span><span class="nl">Menú</span></button>
   </nav>
