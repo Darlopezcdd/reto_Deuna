@@ -2,13 +2,13 @@ import './style.css';
 
 // ═══ SURVEY DATA ANALYSIS ═══
 const surveyData = {
-  total: 113,
-  usaDeuna: { si: 67, no: 46 },
-  conoceDescuentos: { si: 35, no: 78 },
-  atractivo: { '1': 6, '2': 4, '3': 19, '4': 27, '5': 57 },
+  total: 118,
+  usaDeuna: { si: 75, no: 43 },
+  conoceDescuentos: { si: 37, no: 81 },
+  atractivo: { '1': 7, '2': 4, '3': 23, '4': 27, '5': 57 },
   motivacion: {
-    'definitivamente sí': 48,
-    'probablemente sí': 42,
+    'definitivamente sí': 52,
+    'probablemente sí': 49,
     'Probablemente no': 7,
     'no cambiaría mi uso actual': 10,
     'Definitivamente no': 0
@@ -20,7 +20,7 @@ const pctUsaDeuna = Math.round((surveyData.usaDeuna.si / surveyData.total) * 100
 const pctNoConoceDesc = Math.round((surveyData.conoceDescuentos.no / surveyData.total) * 100);
 const pctAtractivo45 = Math.round(((surveyData.atractivo['4'] + surveyData.atractivo['5']) / surveyData.total) * 100);
 const pctMotivaSi = Math.round(((surveyData.motivacion['definitivamente sí'] + surveyData.motivacion['probablemente sí']) / surveyData.total) * 100);
-const promedioAtractivo = ((1*6 + 2*4 + 3*19 + 4*27 + 5*57) / surveyData.total).toFixed(1);
+const promedioAtractivo = ((1*7 + 2*4 + 3*23 + 4*27 + 5*57) / surveyData.total).toFixed(1);
 
 document.querySelector('#app').innerHTML = `
   <!-- NAV -->
@@ -286,7 +286,7 @@ document.querySelector('#app').innerHTML = `
         <div class="vp-item">
           <strong>Para Deuna</strong>
           <ul>
-            <li>Convierte el 52% pasivo en activo (${pctMotivaSi}% dice sí)</li>
+            <li>Se notará un aumento significativo en el porcentaje de usuarios activos (${pctMotivaSi}% lo confirma)</li>
             <li>Comisión por cada transacción de cupón</li>
             <li>Incrementa volumen de transacciones</li>
           </ul>
