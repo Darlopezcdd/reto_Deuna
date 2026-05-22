@@ -967,6 +967,26 @@ function listenForNewCupones() {
 }
 
 // ═══════════════════════════════════════════════
+//  LISTENER TIEMPO REAL: MIS CUPONES (onSnapshot)
+// ═══════════════════════════════════════════════
+function listenMisCupones() {
+  db.collection('usuarios').doc(USER_ID).collection('mis_cupones')
+    .onSnapshot((snap) => {
+      misCupones = [];
+      snap.forEach(doc => {
+        const data = doc.data();
+        const cat = catalogoCupones.find(c => c.id === data.cuponId) || CATALOGO_SEED[0];
+        misCupones.push({ ...data, _docId: doc.id, ...cat });
+      });
+      renderMisCupones();
+      renderCuponesAdquirir();
+      console.log('🔄 Mis cupones actualizados en tiempo real:', misCupones.map(m => m.nombre + '=' + m.estado));
+    }, (err) => {
+      console.warn('Listener mis_cupones error:', err);
+    });
+}
+
+// ═══════════════════════════════════════════════
 //  INIT
 // ═══════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', async () => {
@@ -980,6 +1000,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   listenForActivity();
   listenForNewCupones();
   listenMarketplace();
+  listenMisCupones();
 
   // Dots animation
   let di = 0;
