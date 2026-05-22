@@ -255,6 +255,14 @@ function renderMisCupones() {
     const estadoClass = mc.estado;
     const estadoLabel = mc.estado.charAt(0).toUpperCase() + mc.estado.slice(1);
     const isComercializable = mc.estado === 'nuevo' || mc.estado === 'activo';
+    const isPublicado = mc.estado === 'publicado';
+
+    let actionBtn = '';
+    if (isComercializable) {
+      actionBtn = `<button class="cupon-btn purple" onclick="event.stopPropagation(); showComercializarForm(${i})">Comercializar</button>`;
+    } else if (isPublicado) {
+      actionBtn = `<button class="cupon-btn cancel-btn" onclick="event.stopPropagation(); cancelarPublicacion(${i})">Cancelar Publicación</button>`;
+    }
 
     html += `<div class="cupon-card-v2 ${mc.estado === 'caducado' ? 'locked' : ''}" onclick="${isComercializable ? 'showComercializarForm(' + i + ')' : ''}">
       <div class="cv2-img" style="background:${mc.bg}"><span>${mc.emoji}</span></div>
@@ -266,12 +274,40 @@ function renderMisCupones() {
         ${mc.precioReventa > 0 ? `<p style="font-size:.6rem;color:var(--p);font-weight:700">Precio reventa: $${mc.precioReventa.toFixed(2)}</p>` : ''}
       </div>
       <div class="cv2-right">
-        ${isComercializable ? `<button class="cupon-btn purple" onclick="event.stopPropagation(); showComercializarForm(${i})">Comercializar</button>` : ''}
+        ${actionBtn}
         <button class="cupon-btn outline" onclick="event.stopPropagation(); showCuponInfo(${i})">Ver Detalles</button>
         <span class="status-tag ${estadoClass}">${estadoLabel}</span>
       </div>
     </div>`;
   });
+
+  // ── MARKETPLACE: Cupones de otros usuarios ──
+  html += `<div class="cup-section" style="margin-top:16px;border-top:2px solid #f0f0f0;padding-top:14px">
+    <h3 class="cup-subtitle">🛒 Marketplace</h3>
+    <p class="cup-desc">Cupones publicados por otros usuarios</p>
+  </div>`;
+
+  const publicados = misCupones.filter(mc => mc.estado === 'publicado');
+  if (publicados.length === 0) {
+    html += '<div style="text-align:center;padding:20px;color:#aaa"><p style="font-size:.75rem">No hay cupones disponibles en el marketplace</p></div>';
+  } else {
+    publicados.forEach((mc, i) => {
+      const realIdx = misCupones.indexOf(mc);
+      html += `<div class="cupon-card-v2 marketplace-card">
+        <div class="cv2-img" style="background:${mc.bg}"><span>${mc.emoji}</span></div>
+        <div class="cv2-body">
+          ${mc.badge ? `<div class="cv2-badge green">${mc.badge}</div>` : ''}
+          <strong>${mc.nombre}</strong>
+          <p>${mc.descCorto || mc.desc}</p>
+          <p style="font-size:.62rem;color:#888">Vendedor: <strong>otro_usuario</strong></p>
+        </div>
+        <div class="cv2-right">
+          <div class="market-price">$${mc.precioReventa.toFixed(2)}</div>
+          <button class="cupon-btn green-btn" onclick="event.stopPropagation(); comprarCuponMarket(${realIdx})">Comprar</button>
+        </div>
+      </div>`;
+    });
+  }
 
   container.innerHTML = html;
 }
@@ -604,6 +640,115 @@ function showCuponInfo(idx) {
 function goBackFromInfo() {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('s-cupones').classList.add('active');
+}
+
+// ═══════════════════════════════════════════════
+//  SALDO BILLETERA (para demo de compra/venta)
+// ═══════════════════════════════════════════════
+let saldoBilletera = 10.00;
+
+function updateWalletUI() {
+  const el = document.getElementById('wallet-amount');
+  if (el) el.textContent = '$' + saldoBilletera.toFixed(2);
+  // Also update on balance display
+  const balExtra = document.getElementById('bal-wallet');
+  if (balExtra) balExtra.textContent = 'Billetera: $' + saldoBilletera.toFixed(2);
+}
+
+// ═══════════════════════════════════════════════
+//  COMPRAR CUPÓN DEL MARKETPLACE (Demo visual)
+// ═══════════════════════════════════════════════
+async function comprarCuponMarket(idx) {
+  const mc = misCupones[idx];
+  if (!mc || mc.estado !== 'publicado') {
+    t('⚠️ Este cupón ya no está disponible');
+    return;
+  }
+
+  const precio = mc.precioReventa;
+
+  if (saldoBilletera < precio) {
+    t(`❌ Saldo insuficiente. Necesitas $${precio.toFixed(2)} y tienes $${saldoBilletera.toFixed(2)}`);
+    return;
+  }
+
+  // Simular la compra
+  mc.estado = 'revendido';
+  mc.fechaReventa = new Date().toISOString();
+
+  // Actualizar saldos
+  const saldoAntes = saldoBilletera;
+  saldoBilletera -= precio;  // El "comprador" paga
+
+  // Simular que el vendedor recibió el dinero
+  const saldoVendedorAntes = saldoBilletera + precio;
+  const gananciaVendedor = precio;
+
+  try {
+    // Update Firebase
+    if (mc._docId) {
+      await db.collection('usuarios').doc(USER_ID).collection('mis_cupones').doc(mc._docId).update({
+        estado: 'revendido',
+        fechaReventa: mc.fechaReventa
+      });
+    }
+
+    // Remove from market
+    const marketSnap = await db.collection('mercado_cupones').where('cuponId', '==', mc.cuponId).where('estado', '==', 'disponible').get();
+    marketSnap.forEach(doc => doc.ref.update({ estado: 'vendido' }));
+
+    // Log activity
+    await rtdb.ref('actividad/' + USER_ID).push({
+      tipo: 'compra_mercado',
+      cupon: mc.nombre,
+      cuponId: mc.cuponId,
+      precio: precio,
+      timestamp: Date.now()
+    });
+  } catch(e) {
+    console.warn('Market buy error:', e);
+  }
+
+  // Visual feedback
+  t(`🎉 ¡Compraste ${mc.nombre} por $${precio.toFixed(2)}!`);
+
+  // Show balance change modal
+  setTimeout(() => {
+    showBalanceChange(mc.nombre, precio, saldoAntes);
+  }, 800);
+
+  renderMisCupones();
+  updateWalletUI();
+}
+
+function showBalanceChange(cuponName, precio, saldoAntes) {
+  // Create a quick modal showing the transaction
+  const existing = document.getElementById('balance-modal');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'balance-modal';
+  modal.className = 'modal-bg show';
+  modal.innerHTML = `
+    <div class="modal" style="max-width:320px">
+      <div class="modal-check" style="background:linear-gradient(135deg,#0D6832,#1A7A3C)">💰</div>
+      <h3>Transacción completada</h3>
+      <div style="text-align:left;margin:16px 0;font-size:.78rem;color:#555">
+        <div style="padding:8px 12px;background:#f8f5ff;border-radius:10px;margin-bottom:8px">
+          <p style="font-weight:700;color:#5B2D8E;margin-bottom:4px">🛍️ Comprador (tú)</p>
+          <p>Saldo anterior: <strong>$${saldoAntes.toFixed(2)}</strong></p>
+          <p>Pagaste: <strong style="color:#e74c3c">-$${precio.toFixed(2)}</strong></p>
+          <p>Saldo actual: <strong style="color:#0D6832">$${saldoBilletera.toFixed(2)}</strong></p>
+        </div>
+        <div style="padding:8px 12px;background:#f0fdf4;border-radius:10px">
+          <p style="font-weight:700;color:#0D6832;margin-bottom:4px">💸 Vendedor (otro usuario)</p>
+          <p>Recibió: <strong style="color:#0D6832">+$${precio.toFixed(2)}</strong></p>
+          <p style="font-size:.62rem;color:#888">Cupón: ${cuponName}</p>
+        </div>
+      </div>
+      <button class="modal-btn" onclick="document.getElementById('balance-modal').remove()">Entendido</button>
+    </div>`;
+  document.body.appendChild(modal);
 }
 
 // ═══════════════════════════════════════════════

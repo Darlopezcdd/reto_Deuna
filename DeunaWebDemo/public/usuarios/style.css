@@ -105,6 +105,10 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#fff;color:#11
 .cupon-btn.outline{background:none;color:var(--p);border:1.5px solid var(--p)}
 .cupon-btn.outline.sm{font-size:.54rem;padding:3px 7px}
 .cupon-btn.outline.red{color:#e74c3c;border-color:#e74c3c}
+.cupon-btn.cancel-btn{background:#e74c3c;color:#fff}
+.cupon-btn.green-btn{background:#0D6832;color:#fff;padding:6px 14px}
+.marketplace-card{border-left:3px solid #0D6832 !important}
+.market-price{font-size:.85rem;font-weight:900;color:#0D6832}
 
 /* Status Tags */
 .status-tag{font-size:.56rem;font-weight:700;padding:3px 10px;border-radius:6px;text-align:center;margin-top:2px}
