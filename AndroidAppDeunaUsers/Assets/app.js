@@ -630,25 +630,51 @@ async function simularVenta(idx) {
 
   const precio = mc.precioReventa || 0;
 
-  // Cambiar estado a vendido
+  try {
+    // 1. Marcar cupón del vendedor como revendido en Firestore
+    await db.collection('usuarios').doc(USER_ID).collection('mis_cupones').doc(mc._docId).update({
+      estado: 'revendido',
+      fechaReventa: new Date().toISOString()
+    });
+
+    // 2. Buscar y marcar como vendido en mercado_cupones
+    const mercadoSnap = await db.collection('mercado_cupones')
+      .where('vendedor', '==', USER_ID)
+      .where('cuponId', '==', mc.cuponId)
+      .where('estado', '==', 'disponible')
+      .get();
+    
+    for (const doc of mercadoSnap.docs) {
+      await doc.ref.update({
+        estado: 'vendido',
+        comprador: 'comprador_demo',
+        fechaVenta: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }
+
+    // 3. Sumar saldo del vendedor
+    saldoBilletera += precio;
+    await db.collection('usuarios').doc(USER_ID).update({ saldoBilletera: saldoBilletera });
+
+    // 4. Notificar via RTDB (para que el otro PC lo vea)
+    await rtdb.ref('actividad/' + USER_ID).push({
+      tipo: 'compra_mercado',
+      cupon: mc.nombre,
+      cuponId: mc.cuponId,
+      precio: precio,
+      comprador: 'comprador_demo',
+      timestamp: Date.now()
+    });
+
+  } catch(e) {
+    console.warn('Firebase error:', e);
+  }
+
+  // 5. Actualizar estado local
   mc.estado = 'revendido';
   mc.fechaReventa = new Date().toISOString();
 
-  // Sumar saldo
-  saldoBilletera += precio;
-
-  // Guardar en Firebase
-  try {
-    await db.collection('usuarios').doc(USER_ID).collection('mis_cupones').doc(mc._docId).update({
-      estado: 'revendido',
-      fechaReventa: mc.fechaReventa
-    });
-    await db.collection('usuarios').doc(USER_ID).update({ saldoBilletera: saldoBilletera });
-  } catch(e) {
-    console.warn('Save error:', e);
-  }
-
-  // Actualizar UI
+  // 6. Actualizar UI
   updateWalletUI();
   renderMisCupones();
   renderCuponesAdquirir();
