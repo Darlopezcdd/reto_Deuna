@@ -284,12 +284,12 @@ function renderMisCupones() {
 
   // ── MARKETPLACE: Cupones de otros usuarios ──
   html += `<div class="cup-section" style="margin-top:16px;border-top:2px solid #f0f0f0;padding-top:14px">
-    <h3 class="cup-subtitle">🛒 Marketplace</h3>
+    <h3 class="cup-subtitle">🛒 Cupones en venta de la comunidad</h3>
     <p class="cup-desc">Cupones publicados por otros usuarios</p>
   </div>`;
 
   if (marketplaceCupones.length === 0) {
-    html += '<div style="text-align:center;padding:20px;color:#aaa"><p style="font-size:.75rem">No hay cupones disponibles en el marketplace.<br>Espera a que otro usuario publique uno.</p></div>';
+    html += '<div style="text-align:center;padding:20px;color:#aaa"><p style="font-size:.75rem">No hay cupones en venta de la comunidad disponibles en este momento.<br>Espera a que otro usuario publique uno.</p></div>';
   } else {
     marketplaceCupones.forEach((mc, i) => {
       html += `<div class="cupon-card-v2 marketplace-card">
@@ -671,7 +671,7 @@ function listenMarketplace() {
       });
       renderMisCupones();
       if (marketplaceCupones.length > 0) {
-        t('🛒 Hay ' + marketplaceCupones.length + ' cupón(es) disponibles en el marketplace');
+        t('🛒 Hay ' + marketplaceCupones.length + ' cupón(es) en venta de la comunidad');
       }
     }, (err) => {
       console.warn('Marketplace listener error:', err);
