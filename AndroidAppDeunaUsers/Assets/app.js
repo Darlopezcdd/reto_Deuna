@@ -663,9 +663,12 @@ function goBackFromInfo() {
 let saldoBilletera = 10.00;
 
 function updateWalletUI() {
+  // Main balance on home screen
+  const balEl = document.getElementById('bal-amount');
+  if (balEl) balEl.textContent = '$' + saldoBilletera.toFixed(2);
+  // Legacy IDs
   const el = document.getElementById('wallet-amount');
   if (el) el.textContent = '$' + saldoBilletera.toFixed(2);
-  // Also update on balance display
   const balExtra = document.getElementById('bal-wallet');
   if (balExtra) balExtra.textContent = 'Billetera: $' + saldoBilletera.toFixed(2);
 }
@@ -855,14 +858,8 @@ function listenForActivity() {
         db.collection('usuarios').doc(USER_ID).update({ saldoBilletera: saldoBilletera }).catch(e => console.warn(e));
       }
 
-      // Update status to revendido localmente (Firebase ya lo actualizó el comprador)
-      misCupones.forEach(mc => {
-        if (mc.cuponId === data.cuponId && mc.estado === 'publicado') {
-          mc.estado = 'revendido';
-          mc.fechaReventa = new Date().toISOString();
-        }
-      });
-      renderMisCupones();
+      // Recargar datos completos desde Firebase para que el estado pase a 'revendido'
+      loadData();
     }
   });
 }
@@ -896,6 +893,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Firebase data
   await seedFirebase();
   await loadData();
+  updateWalletUI();
   listenForActivity();
   listenForNewCupones();
   listenMarketplace();
