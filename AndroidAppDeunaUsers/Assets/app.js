@@ -280,7 +280,7 @@ function renderMisCupones() {
     if (isComercializable) {
       actionBtn = `<button class="cupon-btn purple" onclick="event.stopPropagation(); showComercializarForm(${i})">Comercializar</button>`;
     } else if (isPublicado) {
-      actionBtn = `<button class="cupon-btn green-btn" onclick="event.stopPropagation(); simularVenta(${i})">Confirmar Venta</button>`;
+      actionBtn = `<span style="font-size:.6rem;color:#0D6832;font-weight:700">⏳ En venta...</span>`;
     }
 
     html += `<div class="cupon-card-v2 ${isBloqueado ? 'locked' : ''}" onclick="${isComercializable ? 'showComercializarForm(' + i + ')' : ''}">
@@ -595,10 +595,52 @@ async function publicarCupon() {
   renderMisCupones();
   renderCuponesAdquirir();
 
+  // Auto-venta: después de 2s pasa a VENDIDO automáticamente
+  const idxVenta = currentComercIdx;
   setTimeout(() => {
     nav('cupones');
     switchCuponTab('comerciar');
-  }, 1500);
+  }, 1000);
+
+  setTimeout(async () => {
+    const cupon = misCupones[idxVenta];
+    if (!cupon || cupon.estado !== 'publicado') return;
+
+    const precioVenta = cupon.precioReventa || 0;
+
+    try {
+      // 1. Cupón → revendido
+      await db.collection('usuarios').doc(USER_ID).collection('mis_cupones').doc(cupon._docId).update({
+        estado: 'revendido',
+        fechaReventa: new Date().toISOString()
+      });
+
+      // 2. Mercado → vendido
+      const mercSnap = await db.collection('mercado_cupones')
+        .where('vendedor', '==', USER_ID)
+        .where('cuponId', '==', cupon.cuponId)
+        .where('estado', '==', 'disponible')
+        .get();
+      for (const doc of mercSnap.docs) {
+        await doc.ref.update({ estado: 'vendido', comprador: 'comprador_comunidad', fechaVenta: firebase.firestore.FieldValue.serverTimestamp() });
+      }
+
+      // 3. Saldo sube
+      saldoBilletera += precioVenta;
+      await db.collection('usuarios').doc(USER_ID).update({ saldoBilletera: saldoBilletera });
+
+    } catch(e) {
+      console.warn('Auto-venta error:', e);
+    }
+
+    // Actualizar local
+    cupon.estado = 'revendido';
+    saldoBilletera = saldoBilletera; // ya se actualizó arriba
+    updateWalletUI();
+    renderMisCupones();
+    renderCuponesAdquirir();
+    t(`🎉 ¡${cupon.nombre} VENDIDO! +$${precioVenta.toFixed(2)} a tu saldo`);
+  }, 3000);
 }
 
 async function cancelarPublicacion(idx) {
