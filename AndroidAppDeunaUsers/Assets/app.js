@@ -914,6 +914,9 @@ function listenForActivity() {
   rtdb.ref('actividad/' + USER_ID).orderByChild('timestamp').limitToLast(1).on('child_added', async (snap) => {
     const data = snap.val();
     if (data && data.tipo === 'compra_mercado' && data.timestamp > listenerInitTime) {
+      // Ignorar ventas auto-confirmadas (ya se manejaron en simularVenta)
+      if (data.comprador === 'comprador_demo') return;
+
       // Alguien compró nuestro cupón
       t('🎉 ¡Tu cupón ' + (data.cupon || '') + ' fue comprado por $' + (data.precio||0).toFixed(2) + '!');
       
