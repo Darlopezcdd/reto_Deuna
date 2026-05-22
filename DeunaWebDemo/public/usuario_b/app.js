@@ -548,6 +548,7 @@ async function publicarCupon() {
     // Push to market
     await db.collection('mercado_cupones').add({
       vendedor: USER_ID,
+      vendedorDocId: mc._docId,
       cuponId: mc.cuponId,
       nombre: mc.nombre,
       emoji: mc.emoji,
@@ -713,22 +714,30 @@ async function comprarDelMarketplace(marketDocId) {
       timestamp: Date.now()
     });
 
-    // Guardar cupón comprado en mis cupones
+    // Guardar cupón comprado en mis cupones (estado 'comprado' para que no lo revenda)
     const catRef = catalogoCupones.find(c => c.id === mc.cuponId);
     await db.collection('usuarios').doc(USER_ID).collection('mis_cupones').add({
       cuponId: mc.cuponId,
-      estado: 'activo',
+      estado: 'comprado',
       precioReventa: 0,
       fechaAdquisicion: new Date().toISOString(),
-      compradoEn: 'marketplace',
+      compradoEn: 'comunidad',
       precioCompra: precio
     });
+
+    // Cambiar el estado del cupón del VENDEDOR directamente a 'revendido'
+    if (mc.vendedor && mc.vendedorDocId) {
+      await db.collection('usuarios').doc(mc.vendedor).collection('mis_cupones').doc(mc.vendedorDocId).update({
+        estado: 'revendido',
+        fechaReventa: new Date().toISOString()
+      });
+    }
 
     // Agregar a mis cupones localmente
     if (catRef) {
       misCupones.push({
         cuponId: mc.cuponId,
-        estado: 'activo',
+        estado: 'comprado',
         precioReventa: 0,
         fechaAdquisicion: new Date().toISOString(),
         _docId: 'market_' + Date.now(),
@@ -814,13 +823,21 @@ function t(msg) {
 // ═══════════════════════════════════════════════
 //  FIREBASE REALTIME LISTENER
 // ═══════════════════════════════════════════════
+let listenerInitTime = Date.now();
 function listenForActivity() {
   rtdb.ref('actividad/' + USER_ID).orderByChild('timestamp').limitToLast(1).on('child_added', (snap) => {
     const data = snap.val();
-    if (data && data.tipo === 'compra_mercado') {
-      // Someone bought our cupon!
-      t('🎉 ¡Tu cupón ' + (data.cupon || '') + ' fue comprado!');
-      // Update status to revendido
+    if (data && data.tipo === 'compra_mercado' && data.timestamp > listenerInitTime) {
+      // Alguien compró nuestro cupón
+      t('🎉 ¡Tu cupón ' + (data.cupon || '') + ' fue comprado por $' + (data.precio||0).toFixed(2) + '!');
+      
+      // Añadir el saldo a nuestra billetera
+      if (data.precio) {
+        saldoBilletera += data.precio;
+        updateWalletUI();
+      }
+
+      // Update status to revendido localmente (Firebase ya lo actualizó el comprador)
       misCupones.forEach(mc => {
         if (mc.cuponId === data.cuponId && mc.estado === 'publicado') {
           mc.estado = 'revendido';
