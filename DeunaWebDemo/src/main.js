@@ -2,15 +2,15 @@ import './style.css';
 
 // ═══ SURVEY DATA ANALYSIS ═══
 const surveyData = {
-  total: 118,
-  usaDeuna: { si: 75, no: 43 },
-  conoceDescuentos: { si: 37, no: 81 },
-  atractivo: { '1': 7, '2': 4, '3': 23, '4': 27, '5': 57 },
+  total: 142,
+  usaDeuna: { si: 89, no: 53 },
+  conoceDescuentos: { si: 44, no: 98 },
+  atractivo: { '1': 9, '2': 6, '3': 30, '4': 33, '5': 64 },
   motivacion: {
-    'definitivamente sí': 52,
-    'probablemente sí': 49,
-    'Probablemente no': 7,
-    'no cambiaría mi uso actual': 10,
+    'definitivamente sí': 57,
+    'probablemente sí': 65,
+    'Probablemente no': 8,
+    'no cambiaría mi uso actual': 12,
     'Definitivamente no': 0
   }
 };
@@ -20,7 +20,7 @@ const pctUsaDeuna = Math.round((surveyData.usaDeuna.si / surveyData.total) * 100
 const pctNoConoceDesc = Math.round((surveyData.conoceDescuentos.no / surveyData.total) * 100);
 const pctAtractivo45 = Math.round(((surveyData.atractivo['4'] + surveyData.atractivo['5']) / surveyData.total) * 100);
 const pctMotivaSi = Math.round(((surveyData.motivacion['definitivamente sí'] + surveyData.motivacion['probablemente sí']) / surveyData.total) * 100);
-const promedioAtractivo = ((1*7 + 2*4 + 3*23 + 4*27 + 5*57) / surveyData.total).toFixed(1);
+const promedioAtractivo = ((1*9 + 2*6 + 3*30 + 4*33 + 5*64) / surveyData.total).toFixed(1);
 
 document.querySelector('#app').innerHTML = `
   <!-- NAV -->
