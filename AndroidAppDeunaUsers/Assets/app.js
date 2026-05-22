@@ -147,7 +147,20 @@ async function loadData() {
     // Load user
     const userSnap = await db.collection('usuarios').doc(USER_ID).get();
     if (userSnap.exists) {
-      gastoAcumulado = userSnap.data().gastoAcumulado || GASTO_ACUMULADO_DEFAULT;
+      const userData = userSnap.data();
+      gastoAcumulado = userData.gastoAcumulado || GASTO_ACUMULADO_DEFAULT;
+      if (userData.saldoBilletera !== undefined) {
+        saldoBilletera = userData.saldoBilletera;
+      }
+      // Update UI Name
+      const uName = userData.nombre || 'Usuario';
+      const greetingEl = document.getElementById('ui-greeting');
+      const avatarEl = document.getElementById('ui-avatar');
+      if (greetingEl) greetingEl.innerHTML = `Hola ${uName.split(' ')[0]} 👋`;
+      if (avatarEl) {
+        const parts = uName.split(' ');
+        avatarEl.innerText = (parts[0][0] + (parts.length > 1 ? parts[1][0] : '')).toUpperCase();
+      }
     }
 
     // Load mis cupones
@@ -254,7 +267,8 @@ function renderMisCupones() {
 
   misCupones.forEach((mc, i) => {
     const estadoClass = mc.estado;
-    const estadoLabel = mc.estado.charAt(0).toUpperCase() + mc.estado.slice(1);
+    let estadoLabel = mc.estado.charAt(0).toUpperCase() + mc.estado.slice(1);
+    if (mc.estado === 'revendido') estadoLabel = 'Vendido';
     const isComercializable = mc.estado === 'nuevo' || mc.estado === 'activo';
     const isPublicado = mc.estado === 'publicado';
 
@@ -695,6 +709,9 @@ async function comprarDelMarketplace(marketDocId) {
 
   const saldoAntes = saldoBilletera;
   saldoBilletera -= precio;
+  try {
+    await db.collection('usuarios').doc(USER_ID).update({ saldoBilletera: saldoBilletera });
+  } catch(e) { console.warn('Could not save saldo:', e); }
 
   try {
     // Marcar como vendido en mercado
@@ -835,6 +852,7 @@ function listenForActivity() {
       if (data.precio) {
         saldoBilletera += data.precio;
         updateWalletUI();
+        db.collection('usuarios').doc(USER_ID).update({ saldoBilletera: saldoBilletera }).catch(e => console.warn(e));
       }
 
       // Update status to revendido localmente (Firebase ya lo actualizó el comprador)
@@ -941,6 +959,9 @@ function renderDevTools() {
     if (!isNaN(newSaldo)) {
       saldoBilletera = newSaldo;
       updateWalletUI();
+      try {
+        await db.collection('usuarios').doc(USER_ID).update({ saldoBilletera: newSaldo });
+      } catch(e) {}
     }
 
     if (!isNaN(newGasto)) {
