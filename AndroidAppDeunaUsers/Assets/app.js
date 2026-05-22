@@ -595,52 +595,10 @@ async function publicarCupon() {
   renderMisCupones();
   renderCuponesAdquirir();
 
-  // Auto-venta: después de 2s pasa a VENDIDO automáticamente
-  const idxVenta = currentComercIdx;
   setTimeout(() => {
     nav('cupones');
     switchCuponTab('comerciar');
-  }, 1000);
-
-  setTimeout(async () => {
-    const cupon = misCupones[idxVenta];
-    if (!cupon || cupon.estado !== 'publicado') return;
-
-    const precioVenta = cupon.precioReventa || 0;
-
-    try {
-      // 1. Cupón → revendido
-      await db.collection('usuarios').doc(USER_ID).collection('mis_cupones').doc(cupon._docId).update({
-        estado: 'revendido',
-        fechaReventa: new Date().toISOString()
-      });
-
-      // 2. Mercado → vendido
-      const mercSnap = await db.collection('mercado_cupones')
-        .where('vendedor', '==', USER_ID)
-        .where('cuponId', '==', cupon.cuponId)
-        .where('estado', '==', 'disponible')
-        .get();
-      for (const doc of mercSnap.docs) {
-        await doc.ref.update({ estado: 'vendido', comprador: 'comprador_comunidad', fechaVenta: firebase.firestore.FieldValue.serverTimestamp() });
-      }
-
-      // 3. Saldo sube
-      saldoBilletera += precioVenta;
-      await db.collection('usuarios').doc(USER_ID).update({ saldoBilletera: saldoBilletera });
-
-    } catch(e) {
-      console.warn('Auto-venta error:', e);
-    }
-
-    // Actualizar local
-    cupon.estado = 'revendido';
-    saldoBilletera = saldoBilletera; // ya se actualizó arriba
-    updateWalletUI();
-    renderMisCupones();
-    renderCuponesAdquirir();
-    t(`🎉 ¡${cupon.nombre} VENDIDO! +$${precioVenta.toFixed(2)} a tu saldo`);
-  }, 3000);
+  }, 1500);
 }
 
 async function cancelarPublicacion(idx) {
@@ -663,66 +621,7 @@ async function cancelarPublicacion(idx) {
   renderMisCupones();
 }
 
-// ═══════════════════════════════════════════════
-//  SIMULAR VENTA (un click: publicado → vendido + saldo sube)
-// ═══════════════════════════════════════════════
-async function simularVenta(idx) {
-  const mc = misCupones[idx];
-  if (!mc || mc.estado !== 'publicado') return;
 
-  const precio = mc.precioReventa || 0;
-
-  try {
-    // 1. Marcar cupón del vendedor como revendido en Firestore
-    await db.collection('usuarios').doc(USER_ID).collection('mis_cupones').doc(mc._docId).update({
-      estado: 'revendido',
-      fechaReventa: new Date().toISOString()
-    });
-
-    // 2. Buscar y marcar como vendido en mercado_cupones
-    const mercadoSnap = await db.collection('mercado_cupones')
-      .where('vendedor', '==', USER_ID)
-      .where('cuponId', '==', mc.cuponId)
-      .where('estado', '==', 'disponible')
-      .get();
-    
-    for (const doc of mercadoSnap.docs) {
-      await doc.ref.update({
-        estado: 'vendido',
-        comprador: 'comprador_demo',
-        fechaVenta: firebase.firestore.FieldValue.serverTimestamp()
-      });
-    }
-
-    // 3. Sumar saldo del vendedor
-    saldoBilletera += precio;
-    await db.collection('usuarios').doc(USER_ID).update({ saldoBilletera: saldoBilletera });
-
-    // 4. Notificar via RTDB (para que el otro PC lo vea)
-    await rtdb.ref('actividad/' + USER_ID).push({
-      tipo: 'compra_mercado',
-      cupon: mc.nombre,
-      cuponId: mc.cuponId,
-      precio: precio,
-      comprador: 'comprador_demo',
-      timestamp: Date.now()
-    });
-
-  } catch(e) {
-    console.warn('Firebase error:', e);
-  }
-
-  // 5. Actualizar estado local
-  mc.estado = 'revendido';
-  mc.fechaReventa = new Date().toISOString();
-
-  // 6. Actualizar UI
-  updateWalletUI();
-  renderMisCupones();
-  renderCuponesAdquirir();
-
-  t(`🎉 ¡${mc.nombre} vendido por $${precio.toFixed(2)}! Saldo: $${saldoBilletera.toFixed(2)}`);
-}
 
 // ═══════════════════════════════════════════════
 //  CUPON INFO (Detalle completo)
@@ -819,30 +718,34 @@ async function comprarDelMarketplace(marketDocId) {
 
   const saldoAntes = saldoBilletera;
   saldoBilletera -= precio;
-  try {
-    await db.collection('usuarios').doc(USER_ID).update({ saldoBilletera: saldoBilletera });
-  } catch(e) { console.warn('Could not save saldo:', e); }
 
   try {
-    // Marcar como vendido en mercado
+    // 1. Guardar saldo del COMPRADOR
+    await db.collection('usuarios').doc(USER_ID).update({ saldoBilletera: saldoBilletera });
+
+    // 2. Marcar como vendido en mercado_cupones
     await db.collection('mercado_cupones').doc(marketDocId).update({
       estado: 'vendido',
       comprador: USER_ID,
       fechaVenta: firebase.firestore.FieldValue.serverTimestamp()
     });
 
-    // Notificar al vendedor via RTDB
-    await rtdb.ref('actividad/' + mc.vendedor).push({
-      tipo: 'compra_mercado',
-      cupon: mc.nombre,
-      cuponId: mc.cuponId,
-      precio: precio,
-      comprador: USER_ID,
-      timestamp: Date.now()
+    // 3. Cambiar el estado del cupón del VENDEDOR a 'revendido'
+    if (mc.vendedor && mc.vendedorDocId) {
+      await db.collection('usuarios').doc(mc.vendedor).collection('mis_cupones').doc(mc.vendedorDocId).update({
+        estado: 'revendido',
+        fechaReventa: new Date().toISOString()
+      });
+    }
+
+    // 4. Sumar saldo al VENDEDOR en Firebase directamente
+    const vendedorSnap = await db.collection('usuarios').doc(mc.vendedor).get();
+    const vendedorSaldo = (vendedorSnap.exists && vendedorSnap.data().saldoBilletera) || 0;
+    await db.collection('usuarios').doc(mc.vendedor).update({
+      saldoBilletera: vendedorSaldo + precio
     });
 
-    // Guardar cupón comprado en mis cupones (estado 'comprado' para que no lo revenda)
-    const catRef = catalogoCupones.find(c => c.id === mc.cuponId);
+    // 5. Guardar cupón comprado en MIS cupones
     await db.collection('usuarios').doc(USER_ID).collection('mis_cupones').add({
       cuponId: mc.cuponId,
       estado: 'comprado',
@@ -852,25 +755,16 @@ async function comprarDelMarketplace(marketDocId) {
       precioCompra: precio
     });
 
-    // Cambiar el estado del cupón del VENDEDOR directamente a 'revendido'
-    if (mc.vendedor && mc.vendedorDocId) {
-      await db.collection('usuarios').doc(mc.vendedor).collection('mis_cupones').doc(mc.vendedorDocId).update({
-        estado: 'revendido',
-        fechaReventa: new Date().toISOString()
-      });
-    }
+    // 6. Notificar al vendedor via RTDB (para toast en tiempo real)
+    await rtdb.ref('actividad/' + mc.vendedor).push({
+      tipo: 'compra_mercado',
+      cupon: mc.nombre,
+      cuponId: mc.cuponId,
+      precio: precio,
+      comprador: USER_ID,
+      timestamp: Date.now()
+    });
 
-    // Agregar a mis cupones localmente
-    if (catRef) {
-      misCupones.push({
-        cuponId: mc.cuponId,
-        estado: 'comprado',
-        precioReventa: 0,
-        fechaAdquisicion: new Date().toISOString(),
-        _docId: 'market_' + Date.now(),
-        ...catRef
-      });
-    }
   } catch(e) {
     console.warn('Buy error:', e);
   }
@@ -949,42 +843,16 @@ function t(msg) {
 }
 
 // ═══════════════════════════════════════════════
-//  FIREBASE REALTIME LISTENER
+//  FIREBASE REALTIME LISTENER (solo notificaciones)
 // ═══════════════════════════════════════════════
 let listenerInitTime = Date.now();
 function listenForActivity() {
-  rtdb.ref('actividad/' + USER_ID).orderByChild('timestamp').limitToLast(1).on('child_added', async (snap) => {
+  rtdb.ref('actividad/' + USER_ID).orderByChild('timestamp').limitToLast(1).on('child_added', (snap) => {
     const data = snap.val();
     if (data && data.tipo === 'compra_mercado' && data.timestamp > listenerInitTime) {
-      // Ignorar ventas auto-confirmadas (ya se manejaron en simularVenta)
-      if (data.comprador === 'comprador_demo') return;
-
-      // Alguien compró nuestro cupón
+      // Solo mostrar notificación — el saldo y estado se actualizan
+      // via los listeners de onSnapshot (listenMisCupones y listenUserProfile)
       t('🎉 ¡Tu cupón ' + (data.cupon || '') + ' fue comprado por $' + (data.precio||0).toFixed(2) + '!');
-      
-      // Añadir el saldo a nuestra billetera
-      if (data.precio) {
-        saldoBilletera += data.precio;
-        updateWalletUI();
-        // Save to Firebase BEFORE loadData so it reads the correct value
-        try {
-          await db.collection('usuarios').doc(USER_ID).update({ saldoBilletera: saldoBilletera });
-        } catch(e) { console.warn(e); }
-      }
-
-      // Update local misCupones estado to 'revendido' immediately
-      if (data.cuponId) {
-        misCupones.forEach(mc => {
-          if (mc.cuponId === data.cuponId && mc.estado === 'publicado') {
-            mc.estado = 'revendido';
-          }
-        });
-        renderMisCupones();
-        renderCuponesAdquirir();
-      }
-
-      // Also reload from Firebase to ensure full sync
-      await loadData();
     }
   });
 }
@@ -1022,9 +890,32 @@ function listenMisCupones() {
       });
       renderMisCupones();
       renderCuponesAdquirir();
-      console.log('🔄 Mis cupones actualizados en tiempo real:', misCupones.map(m => m.nombre + '=' + m.estado));
+      console.log('🔄 Mis cupones actualizados:', misCupones.map(m => m.nombre + '=' + m.estado));
     }, (err) => {
       console.warn('Listener mis_cupones error:', err);
+    });
+}
+
+// ═══════════════════════════════════════════════
+//  LISTENER TIEMPO REAL: PERFIL USUARIO (saldo)
+// ═══════════════════════════════════════════════
+function listenUserProfile() {
+  db.collection('usuarios').doc(USER_ID)
+    .onSnapshot((doc) => {
+      if (doc.exists) {
+        const data = doc.data();
+        if (data.saldoBilletera !== undefined) {
+          saldoBilletera = data.saldoBilletera;
+          updateWalletUI();
+        }
+        if (data.gastoAcumulado !== undefined) {
+          gastoAcumulado = data.gastoAcumulado;
+          updateBalanceUI();
+        }
+        console.log('💰 Perfil actualizado: saldo=$' + saldoBilletera.toFixed(2));
+      }
+    }, (err) => {
+      console.warn('Listener perfil error:', err);
     });
 }
 
@@ -1043,6 +934,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   listenForNewCupones();
   listenMarketplace();
   listenMisCupones();
+  listenUserProfile();
 
   // Dots animation
   let di = 0;
