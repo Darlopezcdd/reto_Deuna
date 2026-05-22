@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+  <title>Deuna</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+  <div class="app-container" id="app">
+
+    <!-- ── SCREEN: INICIO ── -->
+    <div class="screen active" id="s-inicio">
+      <div class="scroll-area">
+        <div class="header">
+          <div class="avatar">DL</div>
+          <div class="header-text"><p class="greeting">Hola Dario 👋</p></div>
+          <div class="header-icons">
+            <button class="icon-btn" onclick="t('Notificaciones')">🔔</button>
+            <button class="icon-btn" onclick="t('Soporte')">🎧</button>
+          </div>
+        </div>
+
+        <div class="balance-card">
+          <p class="bal-label">Saldo disponible</p>
+          <div class="bal-row">
+            <span class="bal-amount" id="bal-amount">$0,00</span>
+            <button class="bal-eye" onclick="t('Ocultar saldo')">👁</button>
+            <button class="bal-arrow">›</button>
+          </div>
+          <div class="bal-spent"><span>✨</span><span class="spent-link">Gastaste $250,00 los últimos 30 días</span></div>
+          <div class="bal-recharge">
+            <span class="recharge-text">Recargar desde Principal ●●●9035</span>
+            <button class="recharge-btn" onclick="simularGasto(50)">+$50</button>
+            <span class="recharge-arrow">›</span>
+            <span class="d-badge">d!</span>
+          </div>
+        </div>
+
+        <div class="promo-banner">
+          <div class="promo-banner-text"><strong>¡Gana una TV de 70"!</strong> Haz 3 pagos más y participa<br/><a href="#" class="promo-link">Conoce más ↗</a></div>
+          <div class="promo-emoji">🏆</div>
+          <div class="dots"><span class="dot on"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+        </div>
+
+        <div class="qa-row">
+          <button class="qa" onclick="simularGasto(20)"><div class="qa-ic">💸</div><span>Transferir</span></button>
+          <button class="qa" onclick="simularGasto(15)"><div class="qa-ic">🏦</div><span>Transferir a otro banco</span></button>
+          <button class="qa" onclick="simularGasto(10)"><div class="qa-ic">🔋</div><span>Recargar</span></button>
+          <button class="qa" onclick="t('Cobrar')"><div class="qa-ic">💳</div><span>Cobrar</span></button>
+          <button class="qa" onclick="simularGasto(25)"><div class="qa-ic veci">Veci</div><span>Retirar</span></button>
+        </div>
+        <div class="qa-row">
+          <button class="qa" onclick="simularGasto(5)"><div class="qa-ic">📱</div><span>Recarga celular</span></button>
+          <button class="qa" onclick="simularGasto(30)"><div class="qa-ic">📄</div><span>Pagar servicios</span></button>
+          <button class="qa" onclick="simularGasto(2)"><div class="qa-ic">🚇</div><span>Metro de Quito</span></button>
+          <button class="qa" onclick="t('Deuna Jóvenes')"><div class="qa-ic">👨‍👩‍👧</div><span>Deuna Jóvenes</span></button>
+          <button class="qa" onclick="t('Tienda Deuna')"><div class="qa-ic">🛒</div><span>Tienda Deuna</span></button>
+        </div>
+        <div class="qa-row left">
+          <button class="qa" onclick="t('Invita y Gana')"><div class="qa-ic">🎁</div><span>Invita y Gana</span></button>
+        </div>
+
+        <div class="section">
+          <h3 class="section-title">Gana Con Deuna</h3>
+          <div class="gana-row">
+            <button class="gana-card" onclick="nav('cupones'); switchCuponTab('adquirir')">
+              <div class="gana-ic"><span style="font-size:2.2rem">🎟️</span></div>
+              <span class="gana-label">Adquirir<br/>Cupón</span>
+            </button>
+            <button class="gana-card" onclick="nav('cupones'); switchCuponTab('comerciar')">
+              <div class="gana-ic"><span style="font-size:2.2rem">🏷️</span></div>
+              <span class="gana-label">Comerciar<br/>Cupón</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="section">
+          <h3 class="section-title">Mis promociones</h3>
+          <div class="promo-scroll">
+            <div class="promo-card"><div class="pc-img" style="background:#1a7a3c">🏆</div><div class="pc-badge">Sorteo TVs 70"</div><p class="pc-name">Cada semana</p><p class="pc-desc">Haz 3 pagos en comercios y gana</p></div>
+            <div class="promo-card"><div class="pc-img" style="background:#c8a2c8">💄</div><div class="pc-badge">$150 <s>$180</s></div><p class="pc-name">Perfume 212 Vip Rose</p><p class="pc-desc">Por compras con Deuna</p></div>
+            <div class="promo-card"><div class="pc-img" style="background:#2c3e50">👕</div><div class="pc-badge">$5 de Descuento</div><p class="pc-name">Aéropostale</p><p class="pc-desc">Por compras superiores a $40</p></div>
+          </div>
+        </div>
+
+        <div class="scan-wrap">
+          <button class="scan-btn" onclick="t('Escaneando QR...')"><span>▦</span> Escanear QR</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SCREEN: CUPONES ── -->
+    <div class="screen" id="s-cupones">
+      <div class="scroll-area">
+        <div class="cup-header">
+          <button class="back" onclick="nav('inicio')">‹</button>
+          <h2>Cupones</h2>
+          <div style="width:28px"></div>
+        </div>
+        <div class="tabs">
+          <button class="tab on" id="ctab-adquirir" onclick="switchCuponTab('adquirir')">Adquirir Cupón</button>
+          <button class="tab" id="ctab-comerciar" onclick="switchCuponTab('comerciar')">Comercializar Cupón</button>
+        </div>
+
+        <!-- Dynamic content rendered by JS -->
+        <div id="cup-adquirir">
+          <div style="text-align:center;padding:40px;color:#aaa">
+            <div class="loader"></div>
+            <p style="font-size:.8rem;margin-top:8px">Cargando cupones...</p>
+          </div>
+        </div>
+
+        <div id="cup-comerciar" style="display:none">
+          <div style="text-align:center;padding:40px;color:#aaa">
+            <div class="loader"></div>
+            <p style="font-size:.8rem;margin-top:8px">Cargando mis cupones...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SCREEN: CUPON DETALLE (Adquirir) ── -->
+    <div class="screen" id="s-cupon-detalle">
+      <div class="scroll-area">
+        <div class="cup-header">
+          <button class="back" onclick="nav('cupones')">‹</button>
+          <h2>Cupones</h2>
+          <div style="width:28px"></div>
+        </div>
+        <div class="tabs">
+          <button class="tab on">Adquirir Cupón</button>
+          <button class="tab">Comercializar Cupón</button>
+        </div>
+
+        <div class="detalle-hero" id="detalle-hero">
+          <div class="detalle-hero-bg" id="detalle-hero-bg">🍕</div>
+        </div>
+
+        <div class="detalle-card">
+          <div class="detalle-head">
+            <div class="detalle-logo" id="detalle-logo">🍕</div>
+            <div>
+              <p class="detalle-title" id="detalle-title">Detalles del Cupón Especial</p>
+              <strong class="detalle-name" id="detalle-name">Pizza Hut</strong>
+            </div>
+          </div>
+          <p class="detalle-desc" id="detalle-desc"></p>
+          <p class="detalle-note" id="detalle-note"></p>
+          <p class="detalle-vigencia" id="det-vigencia"></p>
+        </div>
+
+        <div class="progreso-card">
+          <div class="progreso-head">
+            <strong>Progreso de Gasto Acumulado</strong>
+            <span class="progreso-req">Gasto Requerido: <strong id="progreso-req">$290</strong></span>
+          </div>
+          <div class="progreso-bar"><div class="progreso-fill" id="progreso-fill" style="width:86%"></div></div>
+          <div class="progreso-info">
+            <span>🛒 Llevas <strong id="gasto-actual">$250</strong> / <span id="progreso-total">$290</span></span>
+          </div>
+          <p class="progreso-faltan" id="progreso-faltan"></p>
+        </div>
+
+        <div class="detalle-action">
+          <button class="btn-adquirir" id="det-adquirir-btn" onclick="tryAdquirir()">Adquirir</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SCREEN: COMERCIALIZAR FORM ── -->
+    <div class="screen" id="s-comercializar-form">
+      <div class="scroll-area">
+        <div class="cup-header">
+          <button class="back" onclick="nav('cupones'); switchCuponTab('comerciar')">‹</button>
+          <h2>Comercializar</h2>
+          <div style="width:28px"></div>
+        </div>
+
+        <div class="comerc-cupon-preview" id="comerc-preview-area">
+        </div>
+
+        <div class="comerc-form">
+          <label class="comerc-label">Precio de reventa deseado</label>
+          <div class="comerc-input-wrap">
+            <input type="text" class="comerc-input" value="$0.00" id="comerc-price"/>
+          </div>
+          <div class="comerc-slider-wrap">
+            <input type="range" class="comerc-slider" min="0" max="160" value="0" id="comerc-slider" oninput="updateSlider()"/>
+          </div>
+          <p class="comerc-max" id="comerc-max-label">Precio máximo permitido: <strong>$1.60</strong></p>
+          <p class="comerc-note">Una vez publicado, tu cupón aparecerá en la pestaña 'Adquirir'.</p>
+          <button class="btn-publish" onclick="publicarCupon()">Confirmar y Publicar</button>
+        </div>
+
+        <div class="comerc-section" id="comerc-process-list">
+          <h3>Mis Cupones en Proceso</h3>
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SCREEN: CUPON INFO (Full Detail) ── -->
+    <div class="screen" id="s-cupon-info">
+      <div class="scroll-area no-pad">
+        <div class="info-hero" id="info-hero-bg" style="background:linear-gradient(135deg,#c0392b,#e74c3c)">
+          <button class="info-close" onclick="goBackFromInfo()">✕</button>
+          <div class="info-emoji" id="info-emoji">🍕</div>
+        </div>
+        <div class="info-body">
+          <div class="info-badge-wrap"><span class="cv2-badge green" id="info-badge">10% de Descuento</span></div>
+          <h2 class="info-title" id="info-title">Pizza Hut</h2>
+          <div class="info-estado-wrap" id="info-estado"></div>
+          <p class="info-desc" id="info-desc"></p>
+
+          <div class="info-section">
+            <strong>Vigencia:</strong>
+            <p id="info-vigencia">Del 1 al 31 de mayo</p>
+          </div>
+
+          <div class="info-section">
+            <strong>Cómo acceder a la promoción</strong>
+            <p>1. Paga con Deuna o Botón QR de Banca Móvil de Banco Pichincha o Cooperativas de Ahorro y Crédito habilitadas.</p>
+          </div>
+
+          <button class="btn-terms" onclick="t('Abriendo términos...')">Ver términos y condiciones</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SCREEN: BENEFICIOS ── -->
+    <div class="screen" id="s-beneficios">
+      <div class="scroll-area">
+        <div class="s-header"><h2>Beneficios</h2></div>
+        <div class="tabs">
+          <button class="tab" id="tab-club" onclick="switchTab('club')">Club Deuna</button>
+          <button class="tab on" id="tab-promo" onclick="switchTab('promo')">Promociones</button>
+        </div>
+        <div class="tab-content" id="tc-club" style="display:none">
+          <div class="club-card">
+            <div class="club-badge"><div class="club-hex">d!</div></div>
+            <div class="club-info">
+              <strong>Nivel Plata</strong>
+              <p>Completa los pagos necesarios y sube tu nivel. <strong>Se actualizará a inicios del próximo mes.</strong></p>
+              <p class="club-prog-label">Este mes completaste <strong>1 pagos</strong></p>
+              <div class="progress"><div class="progress-fill" style="width:5%"></div></div>
+              <div class="levels">
+                <div class="lvl bronze">d! <span>0</span></div>
+                <div class="lvl silver on">d! <span>5</span></div>
+                <div class="lvl gold">d! <span>11</span></div>
+                <div class="lvl purple">d! <span>20+</span></div>
+              </div>
+            </div>
+          </div>
+          <a href="#" class="club-link">¿Cómo funciona el Club Deuna? ↗</a>
+        </div>
+        <div class="tab-content" id="tc-promo">
+          <h3 class="section-title pad">Destacadas del mes</h3>
+          <div class="feat-card">
+            <div class="feat-img" style="background:linear-gradient(135deg,#e0d7c6,#c9b99a)"><div class="feat-logo">nv</div></div>
+            <div class="feat-badge">Gratis Suero Vitality</div>
+            <strong>Natural Vitality</strong>
+            <p>Por la compra de 3 sueros desde 4 ampollas</p>
+          </div>
+          <h3 class="section-title pad">Códigos promocionales</h3>
+          <div class="code-banner" onclick="t('Ingresa tu código promocional')">
+            <span class="code-new">Nuevo</span>
+            <div><strong>¡Introduce tus códigos aquí!</strong><p>Activa tus promociones ahora</p></div>
+            <div class="code-gift">🎁</div>
+            <span class="code-arr">›</span>
+          </div>
+          <h3 class="section-title pad">Otros</h3>
+          <div class="p-list">
+            <div class="p-item"><div class="p-img" style="background:linear-gradient(135deg,#1a7a3c,#2ecc71)">🏆</div><div class="p-badge">Sorteo TVs de 70"</div><div class="p-info"><strong>Cada semana</strong><p>Haz 3 pagos en comercios y gana</p></div></div>
+            <div class="p-item"><div class="p-img" style="background:linear-gradient(135deg,#c8a2c8,#9b59b6)">💄</div><div class="p-badge">$150 <s style="color:#999">$180</s></div><div class="p-info"><strong>Perfume 212 Vip Rose</strong><p>De Carolina Herrera, $30 OFF</p></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FAB -->
+      <div class="fab-container" id="fab-container">
+        <div class="fab-menu" id="fab-menu">
+          <button class="fab-option" onclick="nav('cupones'); switchCuponTab('comerciar'); toggleFab()">Comerciar Promo</button>
+          <button class="fab-option" onclick="nav('cupones'); switchCuponTab('adquirir'); toggleFab()">Adquirir Promo</button>
+        </div>
+        <button class="fab-btn" id="fab-btn" onclick="toggleFab()">
+          <span class="fab-icon" id="fab-icon">💬</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ── SCREEN: BILLETERA ── -->
+    <div class="screen" id="s-billetera">
+      <div class="scroll-area">
+        <div class="s-header-nav"><button class="back" onclick="nav('inicio')">‹</button><h2>Billetera</h2><button class="eye-btn2">👁</button></div>
+        <h3 class="section-title pad">Cuentas</h3>
+        <div class="acc"><div class="acc-logo purple">d!</div><div class="acc-info"><strong>Deuna ●●●●●●2085</strong><p>$0,00</p></div></div>
+        <div class="acc"><div class="acc-logo yellow">🏦</div><div class="acc-info"><strong>●●●●●●9035</strong><p>$13,16</p></div></div>
+        <a href="#" class="link-sm">No veo todas mis cuentas ↗</a>
+        <h3 class="section-title pad">Cuentas de mis hijos/as</h3>
+        <div class="hijos"><div><strong>Crea una cuenta nueva para un menor de edad</strong><p>Si tienes hijos entre 12 y 17 años ya pueden usar Deuna</p><a href="#" class="link-purple">Crear ahora ›</a></div><div class="hijos-emoji">🎧</div></div>
+      </div>
+    </div>
+
+    <!-- ── SCREEN: PERFIL ── -->
+    <div class="screen" id="s-perfil">
+      <div class="scroll-area no-pad">
+        <div class="perfil-top"><button class="back light" onclick="nav('inicio')">‹</button></div>
+        <div class="perfil-hero">
+          <div class="perfil-avatar">DL<div class="perfil-badge">d!</div></div>
+          <h2>Dario Lopez</h2>
+          <p class="sub">Última sesión: 21 may. 2026 | 12:08</p>
+          <p class="ver">Versión 5.2.74.1354</p>
+        </div>
+        <div class="perfil-menu">
+          <div class="menu-item"><span class="mi">👤</span>Información personal<span class="arr">›</span></div>
+          <div class="menu-item"><span class="mi">🎨</span>Apariencia<span class="arr">›</span></div>
+          <div class="menu-item"><span class="mi">⚙️</span>Configuración de límites<span class="arr">›</span></div>
+          <div class="menu-item"><span class="mi">📡</span>Pagos sin internet<span class="arr">›</span></div>
+          <div class="menu-item"><span class="mi">🔒</span>Cambio de clave<span class="arr">›</span></div>
+          <div class="menu-item"><span class="mi">🏪</span>Mi negocio<span class="arr">›</span></div>
+          <div class="menu-item"><span class="mi">🎁</span>Beneficios<span class="arr">›</span></div>
+          <div class="menu-item"><span class="mi">📋</span>Certificado bancario<span class="arr">›</span></div>
+          <div class="menu-item"><span class="mi">👥</span>Ayuda<span class="arr">›</span></div>
+          <div class="menu-item"><span class="mi">📄</span>Términos y condiciones<span class="arr">›</span></div>
+        </div>
+        <div class="perfil-foot">
+          <button class="logout" onclick="t('Cerrando sesión...')">Cerrar sesión</button>
+          <p class="foot-logo">d! deuna</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <nav class="bottom-nav" id="bnav">
+    <button class="nb on" id="nb-inicio" onclick="nav('inicio')"><span class="ni">🏠</span><span class="nl">Inicio</span></button>
+    <button class="nb" id="nb-beneficios" onclick="nav('beneficios')"><span class="ni">🎁</span><span class="nl">Beneficios</span></button>
+    <button class="nb" id="nb-billetera" onclick="nav('billetera')"><span class="ni">💳</span><span class="nl">Billetera</span></button>
+    <button class="nb" id="nb-perfil" onclick="nav('perfil')"><span class="ni">👤</span><span class="nl">Tú</span></button>
+  </nav>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

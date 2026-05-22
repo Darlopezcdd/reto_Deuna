@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "43792912347",
+    "firebase_url": "https://deuna-4a046-default-rtdb.firebaseio.com",
+    "project_id": "deuna-4a046",
+    "storage_bucket": "deuna-4a046.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:43792912347:android:7e2a7c37831ad25bfb21fe",
+        "android_client_info": {
+          "package_name": "De.una_proyect1"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA652wgxkpVIJi5Va_14zGyrN6K3ShFgiM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

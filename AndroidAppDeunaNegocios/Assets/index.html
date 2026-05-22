@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+  <title>Deuna Negocios</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+  <div class="app-container" id="app">
+
+    <!-- ── SCREEN: INICIO ── -->
+    <div class="screen active" id="s-inicio">
+      <div class="scroll-area">
+        <div class="v-header">
+          <div class="v-store">🏪</div>
+          <div class="v-info">
+            <div class="v-name"><strong>Hola! Jerson</strong><span class="admin-tag">Admin</span></div>
+            <p class="v-biz">Pozo Montaluisa Jerson...</p>
+          </div>
+          <div class="v-actions">
+            <button class="icon-btn" onclick="t('Escanear QR')">▦</button>
+            <button class="icon-btn" onclick="t('Notificaciones')">🔔</button>
+            <button class="icon-btn" onclick="t('Soporte')">🎧</button>
+          </div>
+        </div>
+
+        <div class="tabs">
+          <button class="tab on" id="vtab-cobrar" onclick="vtab('cobrar')">Cobrar</button>
+          <button class="tab" id="vtab-gestionar" onclick="vtab('gestionar')">Gestionar</button>
+        </div>
+
+        <!-- Cobrar -->
+        <div class="tab-content" id="vc-cobrar">
+          <p class="monto-label">Monto</p>
+          <div class="monto-display">
+            <span class="monto-sign">$</span>
+            <span class="monto-val" id="monto-val">0</span>
+          </div>
+          <div class="pm-tabs">
+            <button class="pm on" id="pm-qr" onclick="pm('qr')">QR</button>
+            <button class="pm" id="pm-tarjeta" onclick="pm('tarjeta')">Tarjeta</button>
+            <button class="pm" id="pm-manual" onclick="pm('manual')">Manual</button>
+          </div>
+          <div class="motivo" onclick="t('Agregar motivo')">
+            <span>Agregar motivo (opcional)</span><span>›</span>
+          </div>
+          <div class="numpad">
+            <div class="np-row"><button class="np" onclick="press('1')">1</button><button class="np" onclick="press('2')">2</button><button class="np" onclick="press('3')">3</button></div>
+            <div class="np-row"><button class="np" onclick="press('4')">4</button><button class="np" onclick="press('5')">5</button><button class="np" onclick="press('6')">6</button></div>
+            <div class="np-row"><button class="np" onclick="press('7')">7</button><button class="np" onclick="press('8')">8</button><button class="np" onclick="press('9')">9</button></div>
+            <div class="np-row"><button class="np" onclick="press(',')">,</button><button class="np" onclick="press('0')">0</button><button class="np del" onclick="del()">⌫</button></div>
+          </div>
+          <button class="cta" id="cta-btn" onclick="processPay()">Continuar para Cobrar</button>
+        </div>
+
+        <!-- Gestionar -->
+        <div class="tab-content" id="vc-gestionar" style="display:none">
+          <!-- Mi Saldo -->
+          <div class="saldo-card">
+            <div class="saldo-top">
+              <p class="saldo-label">Mi Saldo</p>
+            </div>
+            <div class="saldo-row">
+              <span class="saldo-sign">$</span>
+              <span class="saldo-stars">********</span>
+              <button class="saldo-eye" onclick="t('Mostrar saldo')">🙈</button>
+              <span class="saldo-arrow">›</span>
+            </div>
+          </div>
+
+          <!-- Accesos rápidos -->
+          <div class="accesos-section">
+            <h3 class="accesos-title">Accesos rápidos</h3>
+            <div class="accesos-row">
+              <button class="acceso" onclick="t('Recargar saldo')">
+                <div class="acceso-ic">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#5B2D8E" stroke-width="2" stroke-linecap="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+                </div>
+                <span>Recargar<br/>saldo</span>
+              </button>
+              <button class="acceso" onclick="t('Transferir saldo')">
+                <div class="acceso-ic">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#5B2D8E" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+                </div>
+                <span>Transferir<br/>saldo</span>
+              </button>
+              <button class="acceso" onclick="t('Venta Manual')">
+                <div class="acceso-ic">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#5B2D8E" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M2 12h20"/><circle cx="12" cy="12" r="4" fill="none"/></svg>
+                </div>
+                <span>Venta<br/>Manual</span>
+              </button>
+              <button class="acceso" onclick="t('Verificar pago')">
+                <div class="acceso-ic">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#5B2D8E" stroke-width="2" stroke-linecap="round"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9" fill="none"/></svg>
+                </div>
+                <span>Verificar<br/>pago</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Novedades -->
+          <div class="novedades-section">
+            <h3 class="accesos-title">Novedades Deuna Negocios</h3>
+            <div class="novedades-row">
+              <div class="novedad-card">
+                <p class="novedad-text">Agrega vendedores a tu equipo</p>
+                <div class="novedad-logo">
+                  <div class="d-logo-neg">d!<span class="neg-label">Negocios</span></div>
+                </div>
+              </div>
+              <div class="novedad-card">
+                <p class="novedad-text">Administra tus ventas con tu caja</p>
+                <div class="novedad-logo">
+                  <div class="d-logo-neg">d!<span class="neg-label">Negocios</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── SCREEN: CAJA ── -->
+    <div class="screen" id="s-caja">
+      <div class="scroll-area">
+        <div class="caja-top">
+          <button class="back" onclick="nav('inicio')">‹</button>
+          <button class="caja-name" onclick="t('Mi caja')">Mi caja ▾</button>
+          <div></div>
+        </div>
+        <div class="tabs">
+          <button class="tab" id="ctab-activa" onclick="ctab('activa')">Caja activa</button>
+          <button class="tab on" id="ctab-historial" onclick="ctab('historial')">Historial</button>
+        </div>
+        <div class="tab-content" id="cc-activa" style="display:none">
+          <div class="caja-bal"><p>Mi caja</p><strong>$0,00</strong></div>
+          <div class="ventas-top"><h3>Mis ventas</h3><button class="add-venta" onclick="t('Agregar venta manual')">+ Agregar venta manual</button></div>
+          <div class="empty"><div class="empty-ic">💰</div><p>No hay ventas todavía</p></div>
+          <button class="abrir-caja" onclick="t('Abriendo caja...')">🖥️ Abrir caja</button>
+        </div>
+        <div class="tab-content" id="cc-historial">
+          <div class="pills">
+            <button class="pill on" onclick="filterH('hoy',this)">Hoy</button>
+            <button class="pill" onclick="filterH('ayer',this)">Ayer</button>
+            <button class="pill" onclick="filterH('semana',this)">Semana</button>
+          </div>
+          <div class="caja-bal"><strong id="hist-amt">$0,00</strong></div>
+          <div class="empty" id="hist-empty"><div class="empty-ic">💰</div><p>No hay ventas todavía</p></div>
+          <div class="sale-list" id="hist-sales" style="display:none">
+            <div class="sale"><div class="sale-ic">💳</div><div class="sale-info"><strong>Pago QR</strong><p>Hace 2 horas</p></div><span class="sale-amt">+$15,50</span></div>
+            <div class="sale"><div class="sale-ic">💳</div><div class="sale-info"><strong>Pago QR</strong><p>Hace 5 horas</p></div><span class="sale-amt">+$8,00</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SCREEN: MENÚ ── -->
+    <div class="screen" id="s-menu">
+      <div class="scroll-area">
+        <div class="s-header-nav"><button class="back" onclick="nav('inicio')">‹</button><h2>Más opciones</h2><div></div></div>
+        <div class="v-profile">
+          <div class="v-profile-ic">🏪</div>
+          <div>
+            <div class="v-name"><strong>Jerson Alexis</strong><span class="admin-tag">Administrador</span></div>
+            <p>Pozo Montaluisa Jerson...</p>
+          </div>
+        </div>
+        <h4 class="menu-title">Mi Negocio</h4>
+        <div class="menu-item" onclick="t('Perfil de negocio')"><span class="mi">🏪</span>Perfil de negocio<span class="arr">›</span></div>
+        <div class="menu-item" onclick="t('Equipo y Roles')"><span class="mi">👥</span>Equipo y Roles<span class="arr">›</span></div>
+        <h4 class="menu-title">Configuraciones</h4>
+        <div class="menu-item" onclick="t('Límites de cuenta')"><span class="mi">💵</span>Límites de cuenta<span class="arr">›</span></div>
+        <div class="menu-item" onclick="t('Clave de seguridad')"><span class="mi">🔒</span>Clave de seguridad<span class="arr">›</span></div>
+        <h4 class="menu-title">Soporte y Ayuda</h4>
+        <div class="menu-item" onclick="t('Soporte')"><span class="mi">🎧</span>Soporte<span class="arr">›</span></div>
+        <div class="menu-item" onclick="t('Material publicitario')"><span class="mi">d!</span>Solicita material publicitario<span class="arr">›</span></div>
+        <div class="menu-item" onclick="t('Tutoriales')"><span class="mi">🎬</span>Tutoriales<span class="arr">›</span></div>
+        <div class="menu-item" onclick="t('Preguntas Frecuentes')"><span class="mi">❓</span>Preguntas Frecuentes<span class="arr">›</span></div>
+        <div class="menu-item" onclick="t('Términos y condiciones')"><span class="mi">📄</span>Términos y condiciones<span class="arr">›</span></div>
+        <div class="v-foot">
+          <button class="logout" onclick="t('Cerrando sesión...')">Cerrar sesión</button>
+          <p class="last-s">Última sesión: 21 May 2026 | 06:50 pm</p>
+          <p class="app-v">versión 1.0.98.198</p>
+          <p class="foot-logo">d! deuna</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SCREEN: CUPONES ── -->
+    <div class="screen" id="s-cupones">
+      <div class="scroll-area">
+        <div class="s-header-nav"><button class="back" onclick="nav('inicio')">‹</button><h2>Cupones</h2><div></div></div>
+        <div class="tabs">
+          <button class="tab on" id="cuptab-crear" onclick="cupTab('crear')">Crear cupón</button>
+          <button class="tab" id="cuptab-listado" onclick="cupTab('listado')">Listado de cupones</button>
+        </div>
+
+        <!-- Crear Cupón Tab -->
+        <div class="tab-content" id="cupc-crear">
+          <div class="form-card">
+            <h3 class="form-title">Cupón digital</h3>
+
+            <div class="form-field photo-field" onclick="t('📸 Subir foto del producto')">
+              <span class="photo-icon">📷</span>
+              <span>Foto del producto</span>
+            </div>
+
+            <div class="form-field">
+              <input type="text" id="cup-titulo" placeholder="Título de cupón" class="form-input"/>
+            </div>
+
+            <div class="form-row">
+              <div class="form-field flex1">
+                <select id="cup-emoji" class="form-input">
+                  <option value="🍕">🍕 Pizza</option>
+                  <option value="🍗">🍗 Pollo</option>
+                  <option value="🎬">🎬 Cine</option>
+                  <option value="🍔">🍔 Burger</option>
+                  <option value="☕">☕ Café</option>
+                  <option value="👕">👕 Ropa</option>
+                  <option value="💄">💄 Belleza</option>
+                  <option value="🎁">🎁 Regalo</option>
+                  <option value="🏆">🏆 Sorteo</option>
+                  <option value="💪">💪 Fitness</option>
+                </select>
+              </div>
+              <div class="form-field flex1">
+                <div class="pct-wrap">
+                  <input type="number" id="cup-descuento" placeholder="00" class="form-input pct-input" min="0" max="100"/>
+                  <span class="pct-sign">%</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-field">
+              <textarea id="cup-desc" placeholder="Descripción corta" class="form-input form-textarea" rows="3"></textarea>
+            </div>
+
+            <div class="form-field">
+              <input type="number" id="cup-puntos" placeholder="Puntos requeridos (ej: 50)" class="form-input" min="0"/>
+            </div>
+
+            <div class="form-field">
+              <input type="date" id="cup-vigencia" class="form-input"/>
+            </div>
+
+            <div class="form-field">
+              <input type="number" id="cup-maxreventa" placeholder="Precio máx. reventa (ej: 1.50)" class="form-input" step="0.01" min="0"/>
+            </div>
+
+            <div class="form-btns">
+              <button class="btn-cancel" onclick="limpiarFormCupon()">Cancelar</button>
+              <button class="btn-save" onclick="crearCupon()">Guardar</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Listado Tab -->
+        <div class="tab-content" id="cupc-listado" style="display:none">
+          <div class="cup-success" id="cup-success" style="display:none">
+            <div class="success-banner">Cupón creado exitosamente</div>
+          </div>
+          <div id="listado-cupones">
+            <div class="empty"><div class="empty-ic">🎟️</div><p>No hay cupones creados</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SCREEN: HISTORIAL CONFIRMACIONES ── -->
+    <div class="screen" id="s-confirmaciones">
+      <div class="scroll-area">
+        <div class="s-header-nav"><button class="back" onclick="nav('cupones'); cupTab('listado')">‹</button><h2>Historial de confirmaciones</h2><div></div></div>
+        <div id="lista-confirmaciones">
+          <div class="empty"><div class="empty-ic">📋</div><p>No hay confirmaciones aún</p></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Cupon Created Modal -->
+  <div class="modal-bg" id="cup-modal">
+    <div class="modal">
+      <div class="modal-check">✓</div>
+      <h3>Su Solicitud está en proceso.</h3>
+      <p>Esté atento a sus notificaciones para la confirmación final.</p>
+      <button class="modal-btn" onclick="closeCupModal()">ACEPTAR</button>
+    </div>
+  </div>
+
+  <nav class="bottom-nav" id="bnav">
+    <button class="nb on" id="nb-inicio" onclick="nav('inicio')"><span class="ni">🏠</span><span class="nl">Inicio</span></button>
+    <button class="nb" id="nb-cupones" onclick="nav('cupones')"><span class="ni">🎟️</span><span class="nl">Cupones</span></button>
+    <button class="nb" id="nb-caja" onclick="nav('caja')"><span class="ni">🖥️</span><span class="nl">Caja</span></button>
+    <button class="nb" id="nb-menu" onclick="nav('menu')"><span class="ni">☰</span><span class="nl">Menú</span></button>
+  </nav>
+
+  <div class="modal-bg" id="pay-modal">
+    <div class="modal">
+      <div class="modal-check">✓</div>
+      <h3>¡Pago exitoso!</h3>
+      <p>El cliente <strong>Dario Lopez</strong> ha pagado <strong id="modal-amt"></strong> en tu negocio.</p>
+      <button class="modal-btn" onclick="closeModal()">Listo</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
+
