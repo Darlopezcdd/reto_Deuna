@@ -280,7 +280,7 @@ function renderMisCupones() {
     if (isComercializable) {
       actionBtn = `<button class="cupon-btn purple" onclick="event.stopPropagation(); showComercializarForm(${i})">Comercializar</button>`;
     } else if (isPublicado) {
-      actionBtn = `<button class="cupon-btn cancel-btn" onclick="event.stopPropagation(); cancelarPublicacion(${i})">Cancelar Publicación</button>`;
+      actionBtn = `<button class="cupon-btn green-btn" onclick="event.stopPropagation(); simularVenta(${i})">Confirmar Venta</button>`;
     }
 
     html += `<div class="cupon-card-v2 ${isBloqueado ? 'locked' : ''}" onclick="${isComercializable ? 'showComercializarForm(' + i + ')' : ''}">
@@ -619,6 +619,41 @@ async function cancelarPublicacion(idx) {
   }
 
   renderMisCupones();
+}
+
+// ═══════════════════════════════════════════════
+//  SIMULAR VENTA (un click: publicado → vendido + saldo sube)
+// ═══════════════════════════════════════════════
+async function simularVenta(idx) {
+  const mc = misCupones[idx];
+  if (!mc || mc.estado !== 'publicado') return;
+
+  const precio = mc.precioReventa || 0;
+
+  // Cambiar estado a vendido
+  mc.estado = 'revendido';
+  mc.fechaReventa = new Date().toISOString();
+
+  // Sumar saldo
+  saldoBilletera += precio;
+
+  // Guardar en Firebase
+  try {
+    await db.collection('usuarios').doc(USER_ID).collection('mis_cupones').doc(mc._docId).update({
+      estado: 'revendido',
+      fechaReventa: mc.fechaReventa
+    });
+    await db.collection('usuarios').doc(USER_ID).update({ saldoBilletera: saldoBilletera });
+  } catch(e) {
+    console.warn('Save error:', e);
+  }
+
+  // Actualizar UI
+  updateWalletUI();
+  renderMisCupones();
+  renderCuponesAdquirir();
+
+  t(`🎉 ¡${mc.nombre} vendido por $${precio.toFixed(2)}! Saldo: $${saldoBilletera.toFixed(2)}`);
 }
 
 // ═══════════════════════════════════════════════
