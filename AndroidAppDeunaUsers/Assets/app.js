@@ -978,6 +978,7 @@ function renderDevTools() {
     <input type="number" id="dev-gasto" value="${gastoAcumulado}" style="width:100%;margin-bottom:12px;padding:4px;border:1px solid #ccc;border-radius:4px;font-size:.7rem"/>
     
     <button id="dev-apply" style="width:100%;background:#7B3FBD;color:#fff;border:none;padding:6px;border-radius:6px;font-weight:bold;cursor:pointer">Aplicar Cambios</button>
+    <button id="dev-reset" style="width:100%;background:#e74c3c;color:#fff;border:none;padding:6px;border-radius:6px;font-weight:bold;cursor:pointer;margin-top:6px">🗑️ Vaciar Todo Firebase</button>
   `;
   document.body.appendChild(panel);
 
@@ -1015,6 +1016,42 @@ function renderDevTools() {
     } else {
       renderCuponesAdquirir();
       t('✅ Valores actualizados para testeo');
+    }
+  };
+
+  document.getElementById('dev-reset').onclick = async () => {
+    if (!confirm('¿Borrar TODOS los datos de Firebase? (catálogo, cupones, mercado, usuarios)')) return;
+    t('🗑️ Vaciando Firebase...');
+    try {
+      const cats = await db.collection('catalogo_cupones').get();
+      for (const doc of cats.docs) await doc.ref.delete();
+
+      const users = await db.collection('usuarios').get();
+      for (const doc of users.docs) {
+        const subs = await doc.ref.collection('mis_cupones').get();
+        for (const sub of subs.docs) await sub.ref.delete();
+        await doc.ref.delete();
+      }
+
+      const mercado = await db.collection('mercado_cupones').get();
+      for (const doc of mercado.docs) await doc.ref.delete();
+
+      await rtdb.ref().remove();
+
+      misCupones = [];
+      catalogoCupones = [];
+      marketplaceCupones = [];
+      saldoBilletera = 10;
+      gastoAcumulado = GASTO_ACUMULADO_DEFAULT;
+      renderMisCupones();
+      renderCuponesAdquirir();
+      updateWalletUI();
+      updateBalanceUI();
+
+      t('✅ Firebase vaciado. Recarga la página para re-seed.');
+    } catch(e) {
+      console.warn('Reset error:', e);
+      t('❌ Error: ' + e.message);
     }
   };
 }
