@@ -828,16 +828,28 @@ function listenMyMarketSales() {
       for (const change of snap.docChanges()) {
         if (change.type === 'modified') {
           const data = change.doc.data();
-          // Si mi cupón fue marcado como vendido por un comprador
-          if (data.estado === 'vendido' && data.vendedorDocId) {
-            console.log('💰 ¡Mi cupón fue comprado! Actualizando mi estado y saldo...');
+          if (data.estado === 'vendido') {
+            console.log('💰 Venta detectada! cuponId:', data.cuponId, 'precio:', data.precio);
 
             try {
-              // 1. Cambiar MI cupón a revendido
-              await db.collection('usuarios').doc(USER_ID).collection('mis_cupones').doc(data.vendedorDocId).update({
-                estado: 'revendido',
-                fechaReventa: new Date().toISOString()
-              });
+              // 1. Buscar MI cupón publicado por cuponId y cambiarlo a revendido
+              const misSnap = await db.collection('usuarios').doc(USER_ID)
+                .collection('mis_cupones')
+                .where('cuponId', '==', data.cuponId)
+                .where('estado', '==', 'publicado')
+                .limit(1)
+                .get();
+
+              if (!misSnap.empty) {
+                const miDoc = misSnap.docs[0];
+                await miDoc.ref.update({
+                  estado: 'revendido',
+                  fechaReventa: new Date().toISOString()
+                });
+                console.log('✅ Cupón actualizado a revendido:', miDoc.id);
+              } else {
+                console.warn('⚠️ No encontré cupón publicado con cuponId:', data.cuponId);
+              }
 
               // 2. Sumar precio a MI saldo
               const mySnap = await db.collection('usuarios').doc(USER_ID).get();
