@@ -17,9 +17,8 @@ const db = firebase.firestore();
 const rtdb = firebase.database();
 
 // ── Constantes ──
-// ⚠️ CAMBIA ESTE ID PARA SER OTRO USUARIO (ej: 'jerson_pozo')
-const USER_ID = 'dario_lopez';
-const GASTO_ACUMULADO_DEFAULT = 250;
+let USER_ID = window.location.href.includes('usuario_b') ? 'jerson_pozo' : 'dario_lopez';
+const GASTO_ACUMULADO_DEFAULT = window.location.href.includes('usuario_b') ? 300 : 250;
 
 // ── Estado Local ──
 let gastoAcumulado = GASTO_ACUMULADO_DEFAULT;
@@ -874,5 +873,75 @@ document.addEventListener('DOMContentLoaded', async () => {
   }, 2500);
 
   console.log('🚀 Deuna Usuarios initialized');
+  
+  // Inject Dev Tools Panel
+  renderDevTools();
 });
+
+// ═══════════════════════════════════════════════
+//  DEV TOOLS PANEL (Modificar usuario, saldo, gasto)
+// ═══════════════════════════════════════════════
+function renderDevTools() {
+  const panel = document.createElement('div');
+  panel.style.cssText = 'position:fixed;bottom:70px;right:10px;background:rgba(255,255,255,0.95);border:2px solid #7B3FBD;border-radius:12px;padding:12px;z-index:9999;box-shadow:0 10px 25px rgba(0,0,0,0.2);backdrop-filter:blur(10px);width:180px;transform:translateX(110%);transition:transform 0.3s;color:#333;font-size:0.7rem;';
+  panel.id = 'dev-panel';
+
+  const toggleBtn = document.createElement('button');
+  toggleBtn.innerHTML = '⚙️';
+  toggleBtn.style.cssText = 'position:fixed;bottom:70px;right:10px;background:#7B3FBD;color:white;border:none;border-radius:50%;width:40px;height:40px;font-size:1.2rem;z-index:10000;box-shadow:0 4px 10px rgba(0,0,0,0.3);cursor:pointer;';
+  toggleBtn.onclick = () => {
+    const isShowing = panel.style.transform === 'translateX(0%)';
+    panel.style.transform = isShowing ? 'translateX(110%)' : 'translateX(0%)';
+  };
+  document.body.appendChild(toggleBtn);
+
+  panel.innerHTML = `
+    <strong style="display:block;margin-bottom:8px;color:#7B3FBD;font-size:.8rem">⚙️ Dev Tools</strong>
+    <label style="display:block;margin-bottom:4px">User ID:</label>
+    <input type="text" id="dev-user" value="${USER_ID}" style="width:100%;margin-bottom:8px;padding:4px;border:1px solid #ccc;border-radius:4px;font-size:.7rem"/>
+    
+    <label style="display:block;margin-bottom:4px">Saldo Billetera ($):</label>
+    <input type="number" id="dev-saldo" value="${saldoBilletera}" style="width:100%;margin-bottom:8px;padding:4px;border:1px solid #ccc;border-radius:4px;font-size:.7rem"/>
+    
+    <label style="display:block;margin-bottom:4px">Gasto Acumulado ($):</label>
+    <input type="number" id="dev-gasto" value="${gastoAcumulado}" style="width:100%;margin-bottom:12px;padding:4px;border:1px solid #ccc;border-radius:4px;font-size:.7rem"/>
+    
+    <button id="dev-apply" style="width:100%;background:#7B3FBD;color:#fff;border:none;padding:6px;border-radius:6px;font-weight:bold;cursor:pointer">Aplicar Cambios</button>
+  `;
+  document.body.appendChild(panel);
+
+  document.getElementById('dev-apply').onclick = async () => {
+    const newUserId = document.getElementById('dev-user').value.trim();
+    const newSaldo = parseFloat(document.getElementById('dev-saldo').value);
+    const newGasto = parseFloat(document.getElementById('dev-gasto').value);
+
+    let reloadData = false;
+    if (newUserId && newUserId !== USER_ID) {
+      USER_ID = newUserId;
+      reloadData = true;
+    }
+
+    if (!isNaN(newSaldo)) {
+      saldoBilletera = newSaldo;
+      updateWalletUI();
+    }
+
+    if (!isNaN(newGasto)) {
+      gastoAcumulado = newGasto;
+      updateBalanceUI();
+      try {
+        await db.collection('usuarios').doc(USER_ID).update({ gastoAcumulado: newGasto });
+      } catch(e) {}
+    }
+
+    if (reloadData) {
+      t('🔄 Cambiando de usuario... cargando datos');
+      await seedFirebase();
+      await loadData();
+    } else {
+      renderCuponesAdquirir();
+      t('✅ Valores actualizados para testeo');
+    }
+  };
+}
 
