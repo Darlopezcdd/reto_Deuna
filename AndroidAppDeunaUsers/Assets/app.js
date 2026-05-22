@@ -265,11 +265,16 @@ function renderMisCupones() {
   }
 
   misCupones.forEach((mc, i) => {
-    const estadoClass = mc.estado;
+    let estadoClass = mc.estado;
     let estadoLabel = mc.estado.charAt(0).toUpperCase() + mc.estado.slice(1);
-    if (mc.estado === 'revendido') estadoLabel = 'Vendido';
     const isComercializable = mc.estado === 'nuevo' || mc.estado === 'activo';
     const isPublicado = mc.estado === 'publicado';
+    const isBloqueado = mc.estado === 'revendido' || mc.estado === 'comprado' || mc.estado === 'caducado';
+
+    // Clear labels for each state
+    if (mc.estado === 'revendido') { estadoLabel = '🔒 Vendido'; estadoClass = 'vendido'; }
+    if (mc.estado === 'comprado') { estadoLabel = '✅ Comprado'; estadoClass = 'comprado'; }
+    if (mc.estado === 'nuevo') { estadoLabel = 'Adquirido'; }
 
     let actionBtn = '';
     if (isComercializable) {
@@ -278,7 +283,7 @@ function renderMisCupones() {
       actionBtn = `<button class="cupon-btn cancel-btn" onclick="event.stopPropagation(); cancelarPublicacion(${i})">Cancelar Publicación</button>`;
     }
 
-    html += `<div class="cupon-card-v2 ${mc.estado === 'caducado' ? 'locked' : ''}" onclick="${isComercializable ? 'showComercializarForm(' + i + ')' : ''}">
+    html += `<div class="cupon-card-v2 ${isBloqueado ? 'locked' : ''}" onclick="${isComercializable ? 'showComercializarForm(' + i + ')' : ''}">
       <div class="cv2-img" style="background:${mc.bg}"><span>${mc.emoji}</span></div>
       <div class="cv2-body">
         ${mc.badge ? `<div class="cv2-badge green">${mc.badge}</div>` : ''}
