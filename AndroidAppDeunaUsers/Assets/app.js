@@ -108,7 +108,7 @@ async function seedFirebase() {
     if (!userSnap.exists) {
       console.log('🔥 Creating user profile...');
       await db.collection('usuarios').doc(USER_ID).set({
-        nombre: 'Dario Lopez',
+        nombre: USER_ID,
         gastoAcumulado: GASTO_ACUMULADO_DEFAULT,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
@@ -152,13 +152,12 @@ async function loadData() {
       if (userData.saldoBilletera !== undefined) {
         saldoBilletera = userData.saldoBilletera;
       }
-      // Update UI Name
-      const uName = userData.nombre || 'Usuario';
+      // Update UI Name using USER_ID
       const greetingEl = document.getElementById('ui-greeting');
       const avatarEl = document.getElementById('ui-avatar');
-      if (greetingEl) greetingEl.innerHTML = `Hola ${uName.split(' ')[0]} 👋`;
+      if (greetingEl) greetingEl.innerHTML = `Hola ${USER_ID} 👋`;
       if (avatarEl) {
-        const parts = uName.split(' ');
+        const parts = USER_ID.split('_');
         avatarEl.innerText = (parts[0][0] + (parts.length > 1 ? parts[1][0] : '')).toUpperCase();
       }
     }
@@ -821,10 +820,11 @@ async function simularGasto(monto) {
 }
 
 function updateBalanceUI() {
-  const el = document.getElementById('bal-amount');
-  if (el) el.textContent = '$' + gastoAcumulado.toFixed(2).replace('.', ',');
+  // Update spent/gasto display (NOT the main balance — that's the wallet)
   const spentEl = document.querySelector('.spent-link');
   if (spentEl) spentEl.textContent = `Gastaste $${gastoAcumulado},00 los últimos 30 días`;
+  // Also update wallet balance since they share the same screen
+  updateWalletUI();
 }
 
 // ═══════════════════════════════════════════════
@@ -845,7 +845,7 @@ function t(msg) {
 // ═══════════════════════════════════════════════
 let listenerInitTime = Date.now();
 function listenForActivity() {
-  rtdb.ref('actividad/' + USER_ID).orderByChild('timestamp').limitToLast(1).on('child_added', (snap) => {
+  rtdb.ref('actividad/' + USER_ID).orderByChild('timestamp').limitToLast(1).on('child_added', async (snap) => {
     const data = snap.val();
     if (data && data.tipo === 'compra_mercado' && data.timestamp > listenerInitTime) {
       // Alguien compró nuestro cupón
@@ -855,11 +855,25 @@ function listenForActivity() {
       if (data.precio) {
         saldoBilletera += data.precio;
         updateWalletUI();
-        db.collection('usuarios').doc(USER_ID).update({ saldoBilletera: saldoBilletera }).catch(e => console.warn(e));
+        // Save to Firebase BEFORE loadData so it reads the correct value
+        try {
+          await db.collection('usuarios').doc(USER_ID).update({ saldoBilletera: saldoBilletera });
+        } catch(e) { console.warn(e); }
       }
 
-      // Recargar datos completos desde Firebase para que el estado pase a 'revendido'
-      loadData();
+      // Update local misCupones estado to 'revendido' immediately
+      if (data.cuponId) {
+        misCupones.forEach(mc => {
+          if (mc.cuponId === data.cuponId && mc.estado === 'publicado') {
+            mc.estado = 'revendido';
+          }
+        });
+        renderMisCupones();
+        renderCuponesAdquirir();
+      }
+
+      // Also reload from Firebase to ensure full sync
+      await loadData();
     }
   });
 }
